@@ -35,7 +35,7 @@ const refreshAccessToken = async () => {
   }
 
   const response = await api.post<AuthResponse>(
-    '/auth/refresh',
+    'v1/auth/refresh',
     undefined,
     { headers: { Authorization: `Bearer ${refreshToken}` } },
   );

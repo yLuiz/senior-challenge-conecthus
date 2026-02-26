@@ -12,13 +12,16 @@ interface PaginatedTasksResponse {
 }
 
 export const tasksApi = {
-  list: (filters?: TaskFilters) =>
+  list: (filters?: TaskFilters, signal?: AbortSignal) =>
     api
       .get<PaginatedTasksResponse>('v1/tasks', {
         params: {
           status: filters?.status,
           dueDate: filters?.dueDateTo,
+          dueDateFrom: filters?.dueDateFrom,
+          search: filters?.search,
         },
+        signal,
       })
       .then((r) => r.data.data),
 

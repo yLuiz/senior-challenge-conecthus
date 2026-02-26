@@ -39,8 +39,8 @@ export class TasksService {
     return task;
   }
 
-  async findAll({ page, limit, status, dueDate }: TaskQueryDto, userId: string): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
-    const cacheKey = `tasks:all:${userId}:${page}:${limit}:${status ?? ''}:${dueDate ?? ''}`;
+  async findAll({ page, limit, status, dueDate, dueDateFrom, search }: TaskQueryDto, userId: string): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
+    const cacheKey = `tasks:all:${userId}:${page}:${limit}:${status ?? ''}:${dueDate ?? ''}:${dueDateFrom ?? ''}:${search ?? ''}`;
 
     const cached = await this._cache.get<PaginatedResultDto<OutputTaskHttpDto>>(cacheKey);
     if (cached) {
@@ -53,7 +53,18 @@ export class TasksService {
     const where = {
       userId,
       ...(status ? { status } : {}),
-      ...(dueDate ? { dueDate: { lte: new Date(dueDate) } } : {}),
+      ...((dueDate || dueDateFrom) ? {
+        dueDate: {
+          ...(dueDate ? { lte: new Date(dueDate) } : {}),
+          ...(dueDateFrom ? { gte: new Date(dueDateFrom) } : {}),
+        },
+      } : {}),
+      ...(search ? {
+        OR: [
+          { title: { contains: search, mode: 'insensitive' as const } },
+          { description: { contains: search, mode: 'insensitive' as const } },
+        ],
+      } : {}),
     };
 
     const [data, total] = await this._prisma.$transaction([
