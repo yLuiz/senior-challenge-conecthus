@@ -7,11 +7,17 @@ export class CreateUserHttpDto {
     name: string;
 
     @ApiProperty({ example: 'joao@example.com' })
-    @IsEmail()
+    @IsEmail(undefined, {
+        message: 'Email inválido.',
+    })
     email: string;
 
     @ApiProperty({ example: 'Senha@123', minLength: 6 })
-    @IsString()
-    @MinLength(6)
+    @IsString({
+        message: 'Senha deve ser um texto.',
+    })
+    @MinLength(6, {
+        message: 'Senha deve ter no mínimo 6 caracteres.',
+    })
     password: string;
 }
