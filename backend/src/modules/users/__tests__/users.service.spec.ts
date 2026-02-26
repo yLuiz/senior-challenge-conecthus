@@ -5,6 +5,7 @@ import { PrismaService } from '../../../infra/database/prisma/prisma.service';
 import { RedisService } from '../../../infra/cache/redis.service';
 import { PaginatedResultDto } from '../../../common/dtos/paginated-result.dto';
 import { UsersService } from '../users.service';
+import { envConfig } from 'src/config/configuration';
 
 jest.mock('bcryptjs', () => ({
   hash: jest.fn().mockResolvedValue('hashed_password'),
@@ -37,11 +38,13 @@ const baseUser = {
   updatedAt: new Date(),
 };
 
+let PASSWORD_SALT: number;
+
 describe('UsersService', () => {
   let service: UsersService;
 
   beforeEach(async () => {
-    process.env.PASSWORD_SALT = '10';
+    PASSWORD_SALT = envConfig().PASSWORD_SALT;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -72,7 +75,7 @@ describe('UsersService', () => {
         password: 'Senha@123',
       });
 
-      expect(bcrypt.hash).toHaveBeenCalledWith('Senha@123', 10);
+      expect(bcrypt.hash).toHaveBeenCalledWith('Senha@123', PASSWORD_SALT);
       expect(mockPrisma.user.create).toHaveBeenCalledWith(
         expect.objectContaining({
           data: expect.objectContaining({

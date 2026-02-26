@@ -2,6 +2,7 @@ import { ConflictException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcryptjs';
+import { envConfig } from 'src/config/configuration';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { UsersService } from '../../users/users.service';
 import { AuthService } from '../auth.service';
@@ -27,11 +28,13 @@ const mockJwtService = {
   decode: jest.fn().mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 }),
 };
 
+let PASSWORD_SALT: number;
+
 describe('AuthService', () => {
   let service: AuthService;
 
   beforeEach(async () => {
-    process.env.PASSWORD_SALT = '10';
+    PASSWORD_SALT = envConfig().PASSWORD_SALT;
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -62,7 +65,7 @@ describe('AuthService', () => {
       const result = await service.register({
         name: 'Test',
         email: 'test@test.com',
-        password: 'pass123',
+        password: 'Senha@123',
       });
 
       expect(result.access_token).toBe('mock-token');
@@ -75,14 +78,14 @@ describe('AuthService', () => {
       mockUsersService.findByEmail.mockResolvedValue({ id: '1', email: 'test@test.com' });
 
       await expect(
-        service.register({ name: 'Test', email: 'test@test.com', password: 'pass123' }),
+        service.register({ name: 'Test', email: 'test@test.com', password: 'Senha@123' }),
       ).rejects.toThrow(ConflictException);
     });
   });
 
   describe('login', () => {
     it('should return tokens on valid credentials', async () => {
-      const hashed = await bcrypt.hash('pass123', 10);
+      const hashed = await bcrypt.hash('Senha@123', PASSWORD_SALT);
       mockUsersService.findByEmail.mockResolvedValue({
         id: '1',
         email: 'test@test.com',
@@ -92,7 +95,7 @@ describe('AuthService', () => {
         updatedAt: new Date(),
       });
 
-      const result = await service.login({ email: 'test@test.com', password: 'pass123' });
+      const result = await service.login({ email: 'test@test.com', password: 'Senha@123' });
 
       expect(result.access_token).toBe('mock-token');
       expect(result.refresh_token).toBe('mock-token');
@@ -101,7 +104,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException on wrong password', async () => {
-      const hashed = await bcrypt.hash('correct', 10);
+      const hashed = await bcrypt.hash('correct', PASSWORD_SALT);
       mockUsersService.findByEmail.mockResolvedValue({
         id: '1',
         email: 'test@test.com',
@@ -125,7 +128,7 @@ describe('AuthService', () => {
   describe('refresh', () => {
     it('should return new tokens when refresh token is valid', async () => {
       const rawToken = 'raw-refresh-token';
-      const hashedToken = await bcrypt.hash(rawToken, 10);
+      const hashedToken = await bcrypt.hash(rawToken, PASSWORD_SALT);
       const storedToken = { id: 'jti-123', userId: 'user-1', token: hashedToken, expiresAt: new Date() };
 
       mockPrisma.refreshToken.findUnique.mockResolvedValue(storedToken);
@@ -161,7 +164,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException when raw token does not match stored hash', async () => {
-      const storedHash = await bcrypt.hash('correct-token', 10);
+      const storedHash = await bcrypt.hash('correct-token', PASSWORD_SALT);
       mockPrisma.refreshToken.findUnique.mockResolvedValue({
         id: 'jti-123',
         userId: 'user-1',

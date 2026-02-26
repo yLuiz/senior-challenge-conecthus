@@ -5,7 +5,7 @@ export function envConfig() {
     return {
         NODE_ENV: process.env.NODE_ENV || 'development',
         PORT: parseInt(process.env.PORT, 10) || 3000,
-        PASSWORD_SALT: process.env.PASSWORD_SALT,
+        PASSWORD_SALT: process.env.PASSWORD_SALT ? parseInt(process.env.PASSWORD_SALT, 10) : 12,
         JWT: {
             SECRET: process.env.JWT_SECRET,
             EXPIRATION: process.env.JWT_EXPIRATION,

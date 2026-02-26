@@ -1,13 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { TaskStatus } from '@prisma/client';
 import * as request from 'supertest';
 import { AppModule } from '../src/app.module';
-
-const TASKS_STATUS = {
-  TODO: 'TODO',
-  IN_PROGRESS: 'IN_PROGRESS',
-  DONE: 'DONE',
-}
 
 describe('Task Manager (e2e)', () => {
   let app: INestApplication;
@@ -142,12 +137,12 @@ describe('Task Manager (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${userAAccessToken}`)
-        .send({ title: 'E2E Task', description: 'Test task', status: TASKS_STATUS.TODO })
+        .send({ title: 'E2E Task', description: 'Test task', status: TaskStatus.TODO })
         .expect(HttpStatus.CREATED);
 
       expect(response.body).toHaveProperty('id');
       expect(response.body.title).toBe('E2E Task');
-      expect(response.body.status).toBe(TASKS_STATUS.TODO);
+      expect(response.body.status).toBe(TaskStatus.TODO);
       createdTaskId = response.body.id;
     });
 
@@ -169,7 +164,7 @@ describe('Task Manager (e2e)', () => {
 
       expect(response.body).toHaveProperty('data');
       response.body.data.forEach((task: { status: string }) => {
-        expect(task.status).toBe(TASKS_STATUS.TODO);
+        expect(task.status).toBe(TaskStatus.TODO);
       });
     });
 
@@ -203,17 +198,17 @@ describe('Task Manager (e2e)', () => {
       const response = await request(app.getHttpServer())
         .patch(`/api/v1/tasks/${createdTaskId}`)
         .set('Authorization', `Bearer ${userAAccessToken}`)
-        .send({ status: TASKS_STATUS.DONE })
+        .send({ status: TaskStatus.DONE })
         .expect(HttpStatus.OK);
 
-      expect(response.body.status).toBe(TASKS_STATUS.DONE);
+      expect(response.body.status).toBe(TaskStatus.DONE);
     });
 
     it('PATCH /api/v1/tasks/:id - should return 404 for non-existent task', async () => {
       await request(app.getHttpServer())
         .patch('/api/v1/tasks/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${userAAccessToken}`)
-        .send({ status: TASKS_STATUS.DONE })
+        .send({ status: TaskStatus.DONE })
         .expect(HttpStatus.NOT_FOUND);
     });
 
@@ -249,7 +244,7 @@ describe('Task Manager (e2e)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${userAAccessToken}`)
-        .send({ title: 'User A exclusive task', status: TASKS_STATUS.TODO });
+        .send({ title: 'User A exclusive task', status: TaskStatus.TODO });
 
       const response = await request(app.getHttpServer())
         .get('/api/v1/tasks')

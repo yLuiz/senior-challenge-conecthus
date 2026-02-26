@@ -151,7 +151,7 @@ describe('TasksService', () => {
     });
 
     it('should return cached result when cache hits', async () => {
-      const cached = new PaginatedResultDto([{ id: '1', title: 'Cached' }] as any, 1, 1, 10);
+      const cached = new PaginatedResultDto<{ id: string; title: string }>([{ id: '1', title: 'Cached' }], 1, 1, 10);
       mockCache.get.mockResolvedValue(cached);
 
       const result = await service.findAll({ page: 1, limit: 10 }, 'user1');
