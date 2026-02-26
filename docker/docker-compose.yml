@@ -1,0 +1,99 @@
+version: '3.9'
+
+services:
+  # Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: taskmanager_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: taskmanager
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+    networks:
+      - app_network
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis 
+  redis:
+    image: redis:7-alpine
+    container_name: taskmanager_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    ports:
+      - '6379:6379'
+    networks:
+      - app_network
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MQTT Broker (Eclipse Mosquitto)
+  mqtt:
+    image: eclipse-mosquitto:2
+    container_name: taskmanager_mqtt
+    restart: unless-stopped
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - mqtt_data:/mosquitto/data
+      - mqtt_log:/mosquitto/log
+    ports:
+      - '1883:1883'
+      - '9001:9001'
+    networks:
+      - app_network
+
+  # Backend (NestJS)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    container_name: taskmanager_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET: ${JWT_SECRET:-supersecretkey_change_in_production}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-15m}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-supersecretrefreshkey_change_in_production}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-7d}
+      REDIS_HOST: ${REDIS_HOST:-redis}
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      REDIS_TTL: ${REDIS_TTL:-3600}
+      MQTT_BROKER_URL: ${MQTT_BROKER_URL:-mqtt://mqtt:1883}
+    ports:
+      - '3000:3000'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mqtt:
+        condition: service_started
+    networks:
+      - app_network
+
+volumes:
+  postgres_data:
+  redis_data:
+  mqtt_data:
+  mqtt_log:
+
+networks:
+  app_network:
+    driver: bridge
