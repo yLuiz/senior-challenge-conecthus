@@ -4,6 +4,7 @@ import * as bcrypt from 'bcryptjs';
 import { PaginatedResultDto } from '../../common/dtos/paginated-result.dto';
 import { PaginationQueryDto } from '../../common/dtos/pagination-query.dto';
 import { PrismaService } from '../../infra/database/prisma/prisma.service';
+import { RedisService } from '../../infra/cache/redis.service';
 import { CreateUserHttpDto } from './http-dtos/create-user.http-dto';
 import { OutputUserHttpDto } from './http-dtos/output-user.http-dto';
 import { UpdateUserHttpDto } from './http-dtos/update-user.http.dto';
@@ -13,9 +14,10 @@ import { HTTP_MESSAGES } from 'src/common/messages/http.messages';
 export class UsersService {
   constructor(
     private _prisma: PrismaService,
+    private _cache: RedisService,
   ) { }
 
-  private _logger = new Logger();
+  private _logger = new Logger(UsersService.name);
 
   private _userFieldsToGet = {
     id: true,
@@ -25,8 +27,11 @@ export class UsersService {
     updatedAt: true,
   };
 
-  async create(dto: CreateUserHttpDto): Promise<OutputUserHttpDto> {
+  private async _invalidateCache(userId: string): Promise<void> {
+    await this._cache.del(this._cache.userProfileKey(userId));
+  }
 
+  async create(dto: CreateUserHttpDto): Promise<OutputUserHttpDto> {
     const { name, email, password } = dto;
 
     const emailAlreadyExists = await this.findByEmail(email);
@@ -39,7 +44,7 @@ export class UsersService {
     const hashed = await bcrypt.hash(password, SALT);
 
     const user = await this._prisma.user.create({
-      data: { name: name, email: email, password: hashed },
+      data: { name, email, password: hashed },
       select: { ...this._userFieldsToGet },
     });
 
@@ -62,6 +67,14 @@ export class UsersService {
   }
 
   async findById(id: string): Promise<OutputUserHttpDto> {
+    const cacheKey = this._cache.userProfileKey(id);
+
+    const cached = await this._cache.get<OutputUserHttpDto>(cacheKey);
+    if (cached) {
+      this._logger.debug(`Cache HIT: ${cacheKey}`);
+      return cached;
+    }
+    this._logger.debug(`Cache MISS: ${cacheKey}`);
 
     const user = await this._prisma.user.findUnique({
       where: { id },
@@ -70,6 +83,7 @@ export class UsersService {
 
     if (!user) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
 
+    await this._cache.set(cacheKey, user);
     return user;
   }
 
@@ -90,20 +104,23 @@ export class UsersService {
       const SALT = parseInt(process.env.PASSWORD_SALT, 10);
       const hashed = await bcrypt.hash(dto.password, SALT);
       dto.password = hashed;
-    }    
+    }
 
-    return this._prisma.user.update({
+    const user = await this._prisma.user.update({
       where: { id },
       data: { ...dto },
       select: { ...this._userFieldsToGet },
     });
+
+    await this._invalidateCache(id);
+    return user;
   }
 
   async delete(id: string) {
+    const userExists = await this.findById(id);
+    if (!userExists) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
 
-    const userExistis = await this.findById(id);
-    if (!userExistis) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
-
+    await this._invalidateCache(id);
     return this._prisma.user.delete({ where: { id } });
   }
 }

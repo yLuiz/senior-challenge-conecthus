@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query } from '@nestjs/common';
-import { ApiParam, ApiTags } from '@nestjs/swagger';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PaginationQueryDto } from '../../common/dtos/pagination-query.dto';
 import { CreateTaskHttpDto } from './http-dtos/create-task.http-dto';
 import { UpdateTaskHttpDto } from './http-dtos/update-task.http-dto';
 import { TasksService } from './tasks.service';
 
 @ApiTags('Tarefas')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('v1/tasks')
 export class TasksController {
 

@@ -1,11 +1,14 @@
-import { Body, Controller, Delete, Get, HttpException, InternalServerErrorException, Param, Patch, Post, Query } from "@nestjs/common";
-import { ApiParam, ApiTags } from "@nestjs/swagger";
+import { Body, Controller, Delete, Get, HttpException, InternalServerErrorException, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { ApiBearerAuth, ApiParam, ApiTags } from "@nestjs/swagger";
+import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaginationQueryDto } from "../../common/dtos/pagination-query.dto";
 import { CreateUserHttpDto } from "./http-dtos/create-user.http-dto";
 import { UsersService } from "./users.service";
 import { UpdateUserHttpDto } from "./http-dtos/update-user.http.dto";
 
 @ApiTags('Usuários')
+@ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('v1/users')
 export class UsersController {
 
