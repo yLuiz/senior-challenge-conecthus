@@ -88,6 +88,23 @@ services:
     networks:
       - app_network
 
+  # Frontend (React + Nginx)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: /api
+        VITE_MQTT_URL: ${VITE_MQTT_URL:-ws://localhost:9001}
+    container_name: taskmanager_frontend
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      - backend
+    networks:
+      - app_network
+      
 volumes:
   postgres_data:
   redis_data:
