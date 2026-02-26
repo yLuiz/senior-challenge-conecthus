@@ -86,6 +86,12 @@ export class UsersService {
       if (emailAlreadyExists && emailAlreadyExists.id !== id) throw new ConflictException(HTTP_MESSAGES.USER.EMAIL_ALREADY_EXISTS);
     }
 
+    if (dto.password) {
+      const SALT = parseInt(process.env.PASSWORD_SALT, 10);
+      const hashed = await bcrypt.hash(dto.password, SALT);
+      dto.password = hashed;
+    }    
+
     return this._prisma.user.update({
       where: { id },
       data: { ...dto },
