@@ -12,5 +12,10 @@ export function envConfig() {
             REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
             REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION,
         },
+        REDIS: {
+            HOST: process.env.REDIS_HOST || 'localhost',
+            PORT: parseInt(process.env.REDIS_PORT, 10) || 6379,
+            TTL: parseInt(process.env.REDIS_TTL, 10) || 3600,
+        },
     };
 }
