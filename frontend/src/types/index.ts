@@ -7,8 +7,26 @@ export interface User {
   createdAt: string;
 }
 
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  status: TaskStatus;
+  dueDate?: string;
+  userId: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface AuthResponse {
   user: User;
   access_token: string;
   refresh_token: string;
+}
+
+export interface TaskFilters {
+  status?: TaskStatus;
+  dueDateFrom?: string;
+  dueDateTo?: string;
+  search?: string;
 }

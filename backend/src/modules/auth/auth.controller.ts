@@ -7,7 +7,7 @@ import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CreateUserHttpDto } from '../users/http-dtos/create-user.http-dto';
 
 @ApiTags('Auth')
-@Controller('auth')
+@Controller('v1/auth')
 export class AuthController {
   constructor(private auth: AuthService) {}
 

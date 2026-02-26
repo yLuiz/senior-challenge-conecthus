@@ -4,7 +4,8 @@ import './index.css';
 import { LoginPage } from './pages/Login';
 import { RegisterPage } from './pages/Register';
 import { ProtectedRoute } from './components/ProtectedRoute';
-import { TasksPage } from './pages/TasksPage';
+import { TasksPage } from './pages/Tasks';
+import { TaskDetailPage } from './pages/TaskDetail';
 
 export default function App() {
   return (
@@ -19,6 +20,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <TasksPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks/:id"
+            element={
+              <ProtectedRoute>
+                <TaskDetailPage />
               </ProtectedRoute>
             }
           />
