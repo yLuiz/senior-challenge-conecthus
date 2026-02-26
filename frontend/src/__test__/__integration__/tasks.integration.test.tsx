@@ -26,14 +26,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from '../context/AuthContext';
-import { ProtectedRoute } from '../components/ProtectedRoute';
-import { TasksPage } from '../pages/Tasks';
-import { mockUser, mockTasks } from './helpers';
-import { Task } from '../types';
+import { AuthProvider } from '../../context/AuthContext';
+import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { TasksPage } from '../../pages/Tasks';
+import { mockUser, mockTasks } from '../helpers';
+import { Task } from '../../types';
 
 // Mocks de módulo
-vi.mock('../api/auth', () => ({
+vi.mock('../../api/auth', () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),
@@ -71,7 +71,7 @@ vi.mock('mqtt', () => ({
   default: { connect: vi.fn(() => mockMqttClient) },
 }));
 
-import { authApi } from '../api/auth';
+import { authApi } from '../../api/auth';
 import { tasksApi } from '@/api/tasks';
 
 const mockedAuthApi = vi.mocked(authApi);

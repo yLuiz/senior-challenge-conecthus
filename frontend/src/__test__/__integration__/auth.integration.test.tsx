@@ -16,13 +16,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from '../context/AuthContext';
-import { LoginPage } from '../pages/Login';
-import { ProtectedRoute } from '../components/ProtectedRoute';
-import { mockUser } from './helpers';
+import { AuthProvider } from '../../context/AuthContext';
+import { LoginPage } from '../../pages/Login';
+import { ProtectedRoute } from '../../components/ProtectedRoute';
+import { mockUser } from '../helpers';
 
 // Mocks de módulo
-vi.mock('../api/auth', () => ({
+vi.mock('../../api/auth', () => ({
   authApi: {
     login: vi.fn(),
     register: vi.fn(),
@@ -32,7 +32,7 @@ vi.mock('../api/auth', () => ({
 }));
 
 // Referências tipadas aos mocks
-import { authApi } from '../api/auth';
+import { authApi } from '../../api/auth';
 const mockedAuthApi = vi.mocked(authApi);
 
 // Auxiliares
