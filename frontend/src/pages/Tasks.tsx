@@ -1,5 +1,5 @@
 import { useTasks } from '@/hooks/useTasks';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { TaskCard } from '../components/TaskCard';
@@ -10,8 +10,16 @@ import styles from './Tasks.module.css';
 export function TasksPage() {
   const navigate = useNavigate();
   const [filters, setFilters] = useState<TaskFilters>({});
+  const [searchInput, setSearchInput] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilters((f) => ({ ...f, search: searchInput || undefined }));
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const { tasks, isLoading, error, createTask, updateTask, removeTask } = useTasks(filters);
 
   const handleCreate = async (data: Partial<Task>) => {
@@ -64,35 +72,37 @@ export function TasksPage() {
         <input
           type="text"
           placeholder="Buscar tarefas..."
-          value={filters.search ?? ''}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, search: e.target.value || undefined }))
-          }
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
           className={styles.filterInput}
         />
 
-        <input
-          type="date"
-          placeholder="De"
-          value={filters.dueDateFrom ?? ''}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, dueDateFrom: e.target.value || undefined }))
-          }
-          className={styles.filterInput}
-        />
+        <div className={styles.dateFilter}>
+          <span className={styles.filterLabel}>Vence a partir de</span>
+          <input
+            type="date"
+            value={filters.dueDateFrom ?? ''}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, dueDateFrom: e.target.value || undefined }))
+            }
+            className={styles.filterInput}
+          />
+        </div>
 
-        <input
-          type="date"
-          placeholder="Até"
-          value={filters.dueDateTo ?? ''}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, dueDateTo: e.target.value || undefined }))
-          }
-          className={styles.filterInput}
-        />
+        <div className={styles.dateFilter}>
+          <span className={styles.filterLabel}>Vence até</span>
+          <input
+            type="date"
+            value={filters.dueDateTo ?? ''}
+            onChange={(e) =>
+              setFilters((f) => ({ ...f, dueDateTo: e.target.value || undefined }))
+            }
+            className={styles.filterInput}
+          />
+        </div>
 
         <button
-          onClick={() => setFilters({})}
+          onClick={() => { setFilters({}); setSearchInput(''); }}
           className={styles.clearBtn}
         >
           Limpar

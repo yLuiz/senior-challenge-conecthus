@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { TaskStatus } from '@prisma/client';
-import { IsDateString, IsEnum, IsOptional } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 import { PaginationQueryDto } from '../../../common/dtos/pagination-query.dto';
 
 export class TaskQueryDto extends PaginationQueryDto {
@@ -13,4 +13,14 @@ export class TaskQueryDto extends PaginationQueryDto {
   @IsDateString()
   @IsOptional()
   dueDate?: string;
+
+  @ApiPropertyOptional({ example: '2026-01-01', description: 'Filtrar tarefas com vencimento a partir desta data (ISO 8601)' })
+  @IsDateString()
+  @IsOptional()
+  dueDateFrom?: string;
+
+  @ApiPropertyOptional({ example: 'reunião', description: 'Buscar tarefas por título ou descrição' })
+  @IsString()
+  @IsOptional()
+  search?: string;
 }

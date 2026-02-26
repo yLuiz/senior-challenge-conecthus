@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useState } from 'react';
+import axios from 'axios';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Task, TaskFilters } from '../types';
 
 import { tasksApi } from '@/api/tasks';
@@ -12,14 +13,19 @@ export function useTasks(filters?: TaskFilters) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchTasks = useCallback(async () => {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = new AbortController();
+
     setIsLoading(true);
     setError(null);
     try {
-      const data = await tasksApi.list(filters);
+      const data = await tasksApi.list(filters, abortControllerRef.current.signal);
       setTasks(data);
-    } catch {
+    } catch (err) {
+      if (axios.isCancel(err)) return;
       setError('Erro ao carregar tarefas');
     } finally {
       setIsLoading(false);
@@ -28,6 +34,7 @@ export function useTasks(filters?: TaskFilters) {
 
   useEffect(() => {
     fetchTasks();
+    return () => abortControllerRef.current?.abort();
   }, [fetchTasks]);
 
   useMqttNotifications(user?.id, fetchTasks);
