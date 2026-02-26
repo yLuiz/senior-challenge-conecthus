@@ -6,6 +6,7 @@ import styles from './Auth.module.css';
 export function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
@@ -50,14 +51,23 @@ export function LoginPage() {
 
           <div className={styles.field}>
             <label className={styles.label}>Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
-              placeholder="********"
-              required
-            />
+            <div className={styles.passwordField}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`${styles.input} ${styles.passwordInput}`}
+                placeholder="********"
+                required
+              />
+              <button
+                type="button"
+                className={styles.togglePassword}
+                onClick={() => setShowPassword((current) => !current)}
+              >
+                {showPassword ? 'Ocultar' : 'Mostrar'}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className={styles.btn} disabled={isLoading}>

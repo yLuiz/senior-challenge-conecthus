@@ -7,6 +7,7 @@ export function RegisterPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -15,9 +16,10 @@ export function RegisterPage() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres');
+      setError('A senha deve ter no minimo 6 caracteres');
       return;
     }
+
     setError('');
     setIsLoading(true);
     try {
@@ -65,14 +67,23 @@ export function RegisterPage() {
 
           <div className={styles.field}>
             <label className={styles.label}>Senha</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className={styles.input}
-              placeholder="Mínimo 6 caracteres"
-              required
-            />
+            <div className={styles.passwordField}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`${styles.input} ${styles.passwordInput}`}
+                placeholder="Minimo 6 caracteres"
+                required
+              />
+              <button
+                type="button"
+                className={styles.togglePassword}
+                onClick={() => setShowPassword((current) => !current)}
+              >
+                {showPassword ? 'Ocultar' : 'Mostrar'}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className={styles.btn} disabled={isLoading}>
@@ -81,7 +92,7 @@ export function RegisterPage() {
         </form>
 
         <p className={styles.footer}>
-          Já tem conta?{' '}
+          Ja tem conta?{' '}
           <Link to="/login" className={styles.link}>
             Entrar
           </Link>

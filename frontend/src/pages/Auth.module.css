@@ -59,6 +59,33 @@
   transition: border-color 0.2s;
 }
 
+.passwordField {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 4.8rem;
+  width: 100%;
+}
+
+.togglePassword {
+  position: absolute;
+  top: 50%;
+  right: 0.65rem;
+  transform: translateY(-50%);
+  border: none;
+  background: transparent;
+  color: #4f46e5;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.15rem 0.2rem;
+}
+
+.togglePassword:hover {
+  color: #4338ca;
+}
+
 .input:focus {
   border-color: #6366f1;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
