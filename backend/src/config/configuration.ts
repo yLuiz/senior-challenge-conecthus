@@ -9,6 +9,7 @@ export function envConfig() {
         JWT: {
             SECRET: process.env.JWT_SECRET,
             EXPIRATION: process.env.JWT_EXPIRATION,
+            REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
             REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION,
         },
     };
