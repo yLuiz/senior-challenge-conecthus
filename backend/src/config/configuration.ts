@@ -1,0 +1,15 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
+export function envConfig() {
+    return {
+        NODE_ENV: process.env.NODE_ENV || 'development',
+        PORT: parseInt(process.env.PORT, 10) || 3000,
+        PASSWORD_SALT: process.env.PASSWORD_SALT,
+        JWT: {
+            SECRET: process.env.JWT_SECRET,
+            EXPIRATION: process.env.JWT_EXPIRATION,
+            REFRESH_EXPIRATION: process.env.JWT_REFRESH_EXPIRATION,
+        },
+    };
+}
