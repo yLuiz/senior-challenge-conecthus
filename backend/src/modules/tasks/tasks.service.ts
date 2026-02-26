@@ -3,6 +3,7 @@ import { PaginatedResultDto } from '../../common/dtos/paginated-result.dto';
 import { PaginationQueryDto } from '../../common/dtos/pagination-query.dto';
 import { PrismaService } from '../../infra/database/prisma/prisma.service';
 import { RedisService } from '../../infra/cache/redis.service';
+import { MqttService } from '../../infra/mqtt/mqtt.service';
 import { HTTP_MESSAGES } from 'src/common/messages/http.messages';
 import { CreateTaskHttpDto } from './http-dtos/create-task.http-dto';
 import { OutputTaskHttpDto } from './http-dtos/output-task.http-dto';
@@ -15,6 +16,7 @@ export class TasksService {
   constructor(
     private _prisma: PrismaService,
     private _cache: RedisService,
+    private _mqtt: MqttService,
   ) { }
 
   async create(dto: CreateTaskHttpDto): Promise<OutputTaskHttpDto> {
@@ -31,6 +33,7 @@ export class TasksService {
     });
 
     await this._cache.delByPattern('tasks:all');
+    this._mqtt.publishTaskCreated(dto.userId, { id: task.id, title: task.title });
     this._logger.log(`Task created: ${task.id}`);
 
     return task;
@@ -79,16 +82,18 @@ export class TasksService {
     });
 
     await this._cache.delByPattern('tasks:all');
+    this._mqtt.publishTaskUpdated(task.userId, { id: task.id, title: task.title });
     this._logger.log(`Task updated: ${id}`);
 
     return task;
   }
 
   async delete(id: string): Promise<void> {
-    await this.findById(id);
+    const task = await this.findById(id);
 
     await this._prisma.task.delete({ where: { id } });
     await this._cache.delByPattern('tasks:all');
+    this._mqtt.publishTaskDeleted(task.userId, { id: task.id, title: task.title });
     this._logger.log(`Task deleted: ${id}`);
   }
 }
