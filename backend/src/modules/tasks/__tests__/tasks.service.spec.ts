@@ -79,7 +79,7 @@ describe('TasksService', () => {
       const tasks = [{ id: '1', title: 'Task' }];
       mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
 
-      const result = await service.findAll({ page: 1, limit: 10 });
+      const result = await service.findAll({ page: 1, limit: 10 }, 'user1');
 
       expect(result).toBeInstanceOf(PaginatedResultDto);
       expect(result.data).toEqual(tasks);
@@ -93,7 +93,7 @@ describe('TasksService', () => {
       const tasks = [{ id: '1', title: 'Task', status: TaskStatus.TODO }];
       mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
 
-      const result = await service.findAll({ page: 1, limit: 10, status: TaskStatus.TODO });
+      const result = await service.findAll({ page: 1, limit: 10, status: TaskStatus.TODO }, 'user1');
 
       expect(result).toBeInstanceOf(PaginatedResultDto);
       expect(result.data).toEqual(tasks);
@@ -103,7 +103,7 @@ describe('TasksService', () => {
       const cached = new PaginatedResultDto([{ id: '1', title: 'Cached' }] as any, 1, 1, 10);
       mockCache.get.mockResolvedValue(cached);
 
-      const result = await service.findAll({ page: 1, limit: 10 });
+      const result = await service.findAll({ page: 1, limit: 10 }, 'user1');
 
       expect(result).toEqual(cached);
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();

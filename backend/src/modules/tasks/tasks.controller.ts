@@ -27,9 +27,9 @@ export class TasksController {
     }
 
     @Get()
-    async findAll(@Query() query: TaskQueryDto) {
+    async findAll(@Query() query: TaskQueryDto, @Request() req: { user: { id: string } }) {
         try {
-            return await this._tasksService.findAll(query);
+            return await this._tasksService.findAll(query, req.user.id);
         } catch (err) {
             if (err instanceof HttpException) throw err;
             throw new InternalServerErrorException(err.message);

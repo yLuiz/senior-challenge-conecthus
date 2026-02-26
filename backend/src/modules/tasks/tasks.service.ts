@@ -39,8 +39,8 @@ export class TasksService {
     return task;
   }
 
-  async findAll({ page, limit, status, dueDate }: TaskQueryDto): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
-    const cacheKey = `tasks:all:${page}:${limit}:${status ?? ''}:${dueDate ?? ''}`;
+  async findAll({ page, limit, status, dueDate }: TaskQueryDto, userId: string): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
+    const cacheKey = `tasks:all:${userId}:${page}:${limit}:${status ?? ''}:${dueDate ?? ''}`;
 
     const cached = await this._cache.get<PaginatedResultDto<OutputTaskHttpDto>>(cacheKey);
     if (cached) {
@@ -51,6 +51,7 @@ export class TasksService {
 
     const skip = (page - 1) * limit;
     const where = {
+      userId,
       ...(status ? { status } : {}),
       ...(dueDate ? { dueDate: { lte: new Date(dueDate) } } : {}),
     };
