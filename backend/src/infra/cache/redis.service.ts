@@ -22,9 +22,9 @@ export class RedisService {
 
   async delByPattern(pattern: string): Promise<void> {
     // Invalidates all keys matching the prefix pattern
-    const store = (this._cache as any).store;
+    const store = this._cache.stores[0]?.store as { keys?: (pattern: string) => Promise<string[]> } | undefined;
     if (store && typeof store.keys === 'function') {
-      const keys: string[] = await store.keys(pattern + '*');
+      const keys = await store.keys(pattern + '*');
       await Promise.all(keys.map((k) => this._cache.del(k)));
     }
   }

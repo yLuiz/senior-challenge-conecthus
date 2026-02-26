@@ -1,6 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import type { ApiError } from '../types';
 import styles from './Auth.module.css';
 
 export function LoginPage() {
@@ -19,9 +21,13 @@ export function LoginPage() {
     try {
       await login(email, password);
       navigate('/');
-    } catch (err: any) {
-      const apiMessage = err?.response?.data?.message;
-      setError(Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage ?? 'Email ou senha invalidos');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiError>(err)) {
+        const apiMessage = err.response?.data?.message;
+        setError(Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage ?? 'Email ou senha invalidos');
+      } else {
+        setError('Email ou senha invalidos');
+      }
       setPassword('');
     } finally {
       setIsLoading(false);
