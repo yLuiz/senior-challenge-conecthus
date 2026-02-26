@@ -49,6 +49,8 @@ describe('TasksService', () => {
     service = module.get<TasksService>(TasksService);
     jest.clearAllMocks();
     mockCache.get.mockResolvedValue(null);
+    mockCache.set.mockResolvedValue(undefined);
+    mockCache.delByPattern.mockResolvedValue(undefined);
   });
 
   describe('create', () => {
@@ -72,6 +74,15 @@ describe('TasksService', () => {
       });
       expect(mockMqtt.publishTaskCreated).toHaveBeenCalledWith(userId, { id: task.id, title: task.title });
     });
+
+    it('should invalidate the tasks cache after creation', async () => {
+      const task = { id: '1', title: 'Test', status: TaskStatus.TODO, userId: 'user1', description: null, dueDate: null, createdAt: new Date(), updatedAt: new Date() };
+      mockPrisma.task.create.mockResolvedValue(task);
+
+      await service.create({ title: 'Test', status: TaskStatus.TODO }, 'user1');
+
+      expect(mockCache.delByPattern).toHaveBeenCalledWith('tasks:all');
+    });
   });
 
   describe('findAll', () => {
@@ -89,6 +100,18 @@ describe('TasksService', () => {
       expect(result.meta.totalPages).toBe(1);
     });
 
+    it('should store the result in cache after a cache miss', async () => {
+      const tasks = [{ id: '1', title: 'Task' }];
+      mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
+
+      await service.findAll({ page: 1, limit: 10 }, 'user1');
+
+      expect(mockCache.set).toHaveBeenCalledWith(
+        expect.stringContaining('tasks:all:user1'),
+        expect.any(PaginatedResultDto),
+      );
+    });
+
     it('should apply status filter when provided', async () => {
       const tasks = [{ id: '1', title: 'Task', status: TaskStatus.TODO }];
       mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
@@ -99,14 +122,43 @@ describe('TasksService', () => {
       expect(result.data).toEqual(tasks);
     });
 
+    it('should apply dueDateFrom filter when provided', async () => {
+      const tasks = [{ id: '1', title: 'Task', dueDate: new Date('2026-06-01') }];
+      mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
+
+      const result = await service.findAll({ page: 1, limit: 10, dueDateFrom: '2026-01-01' }, 'user1');
+
+      expect(result).toBeInstanceOf(PaginatedResultDto);
+      expect(result.data).toEqual(tasks);
+      expect(mockCache.set).toHaveBeenCalledWith(
+        expect.stringContaining('2026-01-01'),
+        expect.any(PaginatedResultDto),
+      );
+    });
+
+    it('should apply search filter when provided', async () => {
+      const tasks = [{ id: '1', title: 'NestJS Workshop', description: 'Learn NestJS' }];
+      mockPrisma.$transaction.mockResolvedValue([tasks, 1]);
+
+      const result = await service.findAll({ page: 1, limit: 10, search: 'NestJS' }, 'user1');
+
+      expect(result).toBeInstanceOf(PaginatedResultDto);
+      expect(result.data).toEqual(tasks);
+      expect(mockCache.set).toHaveBeenCalledWith(
+        expect.stringContaining('NestJS'),
+        expect.any(PaginatedResultDto),
+      );
+    });
+
     it('should return cached result when cache hits', async () => {
-      const cached = new PaginatedResultDto([{ id: '1', title: 'Cached' }] as any, 1, 1, 10);
+      const cached = new PaginatedResultDto<{ id: string; title: string }>([{ id: '1', title: 'Cached' }], 1, 1, 10);
       mockCache.get.mockResolvedValue(cached);
 
       const result = await service.findAll({ page: 1, limit: 10 }, 'user1');
 
       expect(result).toEqual(cached);
       expect(mockPrisma.$transaction).not.toHaveBeenCalled();
+      expect(mockCache.set).not.toHaveBeenCalled();
     });
   });
 
@@ -144,6 +196,28 @@ describe('TasksService', () => {
       });
     });
 
+    it('should invalidate the tasks cache after update', async () => {
+      const existing = { id: '1', title: 'Old', userId: 'user1' };
+      const updated = { id: '1', title: 'New', userId: 'user1' };
+      mockPrisma.task.findUnique.mockResolvedValue(existing);
+      mockPrisma.task.update.mockResolvedValue(updated);
+
+      await service.update('1', { title: 'New' });
+
+      expect(mockCache.delByPattern).toHaveBeenCalledWith('tasks:all');
+    });
+
+    it('should publish a task updated MQTT event', async () => {
+      const existing = { id: '1', title: 'Old', userId: 'user1' };
+      const updated = { id: '1', title: 'New', userId: 'user1' };
+      mockPrisma.task.findUnique.mockResolvedValue(existing);
+      mockPrisma.task.update.mockResolvedValue(updated);
+
+      await service.update('1', { title: 'New' });
+
+      expect(mockMqtt.publishTaskUpdated).toHaveBeenCalledWith('user1', { id: '1', title: 'New' });
+    });
+
     it('should throw NotFoundException when task does not exist', async () => {
       mockPrisma.task.findUnique.mockResolvedValue(null);
 
@@ -158,6 +232,25 @@ describe('TasksService', () => {
 
       await expect(service.delete('1')).resolves.toBeUndefined();
       expect(mockPrisma.task.delete).toHaveBeenCalledWith({ where: { id: '1' } });
+    });
+
+    it('should invalidate the tasks cache after deletion', async () => {
+      mockPrisma.task.findUnique.mockResolvedValue({ id: '1', userId: 'user1', title: 'Task' });
+      mockPrisma.task.delete.mockResolvedValue({});
+
+      await service.delete('1');
+
+      expect(mockCache.delByPattern).toHaveBeenCalledWith('tasks:all');
+    });
+
+    it('should publish a task deleted MQTT event', async () => {
+      const task = { id: '1', userId: 'user1', title: 'Task' };
+      mockPrisma.task.findUnique.mockResolvedValue(task);
+      mockPrisma.task.delete.mockResolvedValue({});
+
+      await service.delete('1');
+
+      expect(mockMqtt.publishTaskDeleted).toHaveBeenCalledWith('user1', { id: '1', title: 'Task' });
     });
 
     it('should throw NotFoundException when task does not exist', async () => {

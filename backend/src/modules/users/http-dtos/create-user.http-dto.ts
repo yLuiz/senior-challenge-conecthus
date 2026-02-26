@@ -2,11 +2,11 @@ import { ApiProperty } from '@nestjs/swagger';
 import { IsEmail, IsString, MinLength } from 'class-validator';
 
 export class CreateUserHttpDto {
-    @ApiProperty({ example: 'João Silva' })
+    @ApiProperty({ example: 'Luiz Victor' })
     @IsString()
     name: string;
 
-    @ApiProperty({ example: 'joao@example.com' })
+    @ApiProperty({ example: 'luiz@example.com' })
     @IsEmail(undefined, {
         message: 'Email inválido.',
     })
