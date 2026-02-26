@@ -2,8 +2,13 @@ import { useCallback, useEffect, useState } from 'react';
 import { Task, TaskFilters } from '../types';
 
 import { tasksApi } from '@/api/tasks';
+import { useAuth } from '@/context/AuthContext';
+import { useMqttNotifications } from './useMqttNotifications';
 
 export function useTasks(filters?: TaskFilters) {
+
+  const { user } = useAuth();
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,6 +29,8 @@ export function useTasks(filters?: TaskFilters) {
   useEffect(() => {
     fetchTasks();
   }, [fetchTasks]);
+
+  useMqttNotifications(user?.id, fetchTasks);
 
   const createTask = async (data: Partial<Task>) => {
     const task = await tasksApi.create(data);
