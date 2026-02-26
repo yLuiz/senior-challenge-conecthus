@@ -77,14 +77,27 @@ export class UsersService {
     return this._prisma.user.findUnique({ where: { email } });
   }
 
-  update(id: string, dto: UpdateUserHttpDto): Promise<OutputUserHttpDto> {
+  async update(id: string, dto: UpdateUserHttpDto): Promise<OutputUserHttpDto> {
     const userExists = this.findById(id);
     if (!userExists) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND);
+
+    if (dto.email) {
+      const emailAlreadyExists = await this.findByEmail(dto.email);
+      if (emailAlreadyExists && emailAlreadyExists.id !== id) throw new ConflictException(HTTP_MESSAGES.USER_EMAIL_ALREADY_EXISTS);
+    }
 
     return this._prisma.user.update({
       where: { id },
       data: { ...dto },
       select: { ...this._userFieldsToGet },
     });
+  }
+
+  async delete(id: string) {
+
+    const userExistis = await this.findById(id);
+    if (!userExistis) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND);
+
+    return this._prisma.user.delete({ where: { id } });
   }
 }
