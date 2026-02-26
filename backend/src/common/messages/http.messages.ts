@@ -1,8 +1,13 @@
 export const HTTP_MESSAGES = {
-    USER_CREATED: 'User created',
-    USER_UPDATED: 'User updated',
-    USER_DELETED: 'User deleted',
-    USER_NOT_FOUND: 'User not found',
-    USER_ALREADY_EXISTS: 'User already exists',
-    USER_EMAIL_ALREADY_EXISTS: 'User email already exists',
+    USER: {
+        CREATED: 'User created',
+        UPDATED: 'User updated',
+        DELETED: 'User deleted',
+        NOT_FOUND: 'User not found',
+        ALREADY_EXISTS: 'User already exists',
+        EMAIL_ALREADY_EXISTS: 'User email already exists',
+    },
+    TASK: {
+        NOT_FOUND: 'Task not found',
+    },
 };
