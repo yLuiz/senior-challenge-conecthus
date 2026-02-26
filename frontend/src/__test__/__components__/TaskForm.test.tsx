@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { TaskForm } from '../components/TaskForm';
+import { TaskForm } from '../../components/TaskForm';
 
 describe('TaskForm', () => {
   it('renders all fields', () => {
