@@ -62,7 +62,6 @@ function renderAuthFlow(initialRoute = '/login') {
   );
 }
 
-// Testes
 describe('Fluxo de Autenticação (integração)', () => {
   beforeEach(() => {
     localStorage.clear();
@@ -73,7 +72,6 @@ describe('Fluxo de Autenticação (integração)', () => {
     localStorage.clear();
   });
 
-  // ProtectedRoute
   describe('ProtectedRoute', () => {
     it('redireciona para /login quando o usuário não está autenticado', async () => {
       // getMe rejeita pois não há token válido no localStorage
@@ -98,7 +96,6 @@ describe('Fluxo de Autenticação (integração)', () => {
     });
   });
 
-  // Página de Login
   describe('Página de Login', () => {
     it('renderiza os campos de email, senha e o botão de entrar', async () => {
       mockedAuthApi.getMe.mockRejectedValue(new Error('Unauthorized'));
@@ -166,7 +163,7 @@ describe('Fluxo de Autenticação (integração)', () => {
 
     it('desabilita o botão e exibe "Entrando..." durante o envio do formulário', async () => {
       mockedAuthApi.getMe.mockRejectedValue(new Error('Unauthorized'));
-      // Nunca resolve, pois simula uma requisição lenta
+      // Nunca resolve a promise, pois simula uma requisição lenta
       mockedAuthApi.login.mockImplementation(() => new Promise(() => {}));
 
       renderAuthFlow('/login');
