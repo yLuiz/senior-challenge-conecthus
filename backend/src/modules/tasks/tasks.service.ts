@@ -1,6 +1,5 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PaginatedResultDto } from '../../common/dtos/paginated-result.dto';
-import { PaginationQueryDto } from '../../common/dtos/pagination-query.dto';
 import { PrismaService } from '../../infra/database/prisma/prisma.service';
 import { RedisService } from '../../infra/cache/redis.service';
 import { MqttService } from '../../infra/mqtt/mqtt.service';
@@ -8,6 +7,7 @@ import { HTTP_MESSAGES } from 'src/common/messages/http.messages';
 import { CreateTaskHttpDto } from './http-dtos/create-task.http-dto';
 import { OutputTaskHttpDto } from './http-dtos/output-task.http-dto';
 import { UpdateTaskHttpDto } from './http-dtos/update-task.http-dto';
+import { TaskQueryDto } from './http-dtos/task-query.http-dto';
 
 @Injectable()
 export class TasksService {
@@ -19,8 +19,8 @@ export class TasksService {
     private _mqtt: MqttService,
   ) { }
 
-  async create(dto: CreateTaskHttpDto): Promise<OutputTaskHttpDto> {
-    const { title, description, status, dueDate, userId } = dto;
+  async create(dto: CreateTaskHttpDto, userId: string): Promise<OutputTaskHttpDto> {
+    const { title, description, status, dueDate } = dto;
 
     const task = await this._prisma.task.create({
       data: {
@@ -33,14 +33,14 @@ export class TasksService {
     });
 
     await this._cache.delByPattern('tasks:all');
-    this._mqtt.publishTaskCreated(dto.userId, { id: task.id, title: task.title });
+    this._mqtt.publishTaskCreated(userId, { id: task.id, title: task.title });
     this._logger.log(`Task created: ${task.id}`);
 
     return task;
   }
 
-  async findAll({ page, limit }: PaginationQueryDto): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
-    const cacheKey = `tasks:all:${page}:${limit}`;
+  async findAll({ page, limit, status, dueDate }: TaskQueryDto, userId: string): Promise<PaginatedResultDto<OutputTaskHttpDto>> {
+    const cacheKey = `tasks:all:${userId}:${page}:${limit}:${status ?? ''}:${dueDate ?? ''}`;
 
     const cached = await this._cache.get<PaginatedResultDto<OutputTaskHttpDto>>(cacheKey);
     if (cached) {
@@ -50,10 +50,15 @@ export class TasksService {
     this._logger.debug(`Cache MISS: ${cacheKey}`);
 
     const skip = (page - 1) * limit;
+    const where = {
+      userId,
+      ...(status ? { status } : {}),
+      ...(dueDate ? { dueDate: { lte: new Date(dueDate) } } : {}),
+    };
 
     const [data, total] = await this._prisma.$transaction([
-      this._prisma.task.findMany({ skip, take: limit }),
-      this._prisma.task.count(),
+      this._prisma.task.findMany({ where, skip, take: limit }),
+      this._prisma.task.count({ where }),
     ]);
 
     const result = new PaginatedResultDto(data, total, page, limit);

@@ -1,6 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { TaskStatus } from '@prisma/client';
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
 
 export class CreateTaskHttpDto {
     @ApiProperty({ example: 'Implementar autenticação' })
@@ -21,8 +21,4 @@ export class CreateTaskHttpDto {
     @IsDateString()
     @IsOptional()
     dueDate?: string;
-
-    @ApiProperty({ example: 'uuid-do-usuario' })
-    @IsUUID()
-    userId: string;
 }
