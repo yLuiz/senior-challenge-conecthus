@@ -88,7 +88,7 @@ export function TaskDetailPage() {
             <div className={styles.meta}>
               {task.dueDate && (
                 <span>
-                  📅 Vence: {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                  📅 Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
                 </span>
               )}
               <span>

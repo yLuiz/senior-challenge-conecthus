@@ -39,7 +39,7 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange }: TaskCardPr
 
       {task.dueDate && (
         <p className={styles.dueDate}>
-          Vence: {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+          Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
         </p>
       )}
 
