@@ -1,6 +1,8 @@
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import type { ApiError } from '../types';
 import styles from './Auth.module.css';
 
 export function RegisterPage() {
@@ -25,8 +27,13 @@ export function RegisterPage() {
     try {
       await register(name, email, password);
       navigate('/');
-    } catch (err: any) {
-      setError(err?.response?.data?.message ?? 'Erro ao criar conta');
+    } catch (err: unknown) {
+      if (axios.isAxiosError<ApiError>(err)) {
+        const apiMessage = err.response?.data?.message;
+        setError(Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage ?? 'Erro ao criar conta');
+      } else {
+        setError('Erro ao criar conta');
+      }
     } finally {
       setIsLoading(false);
     }

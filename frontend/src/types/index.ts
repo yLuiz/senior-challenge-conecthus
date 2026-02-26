@@ -30,3 +30,9 @@ export interface TaskFilters {
   dueDateTo?: string;
   search?: string;
 }
+
+export interface ApiError {
+  message: string | string[];
+  statusCode?: number;
+  error?: string;
+}
