@@ -1,7 +1,7 @@
-import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, InternalServerErrorException, Param, Patch, Post, Query, Request, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiParam, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { PaginationQueryDto } from '../../common/dtos/pagination-query.dto';
+import { TaskQueryDto } from './http-dtos/task-query.http-dto';
 import { CreateTaskHttpDto } from './http-dtos/create-task.http-dto';
 import { UpdateTaskHttpDto } from './http-dtos/update-task.http-dto';
 import { TasksService } from './tasks.service';
@@ -17,9 +17,9 @@ export class TasksController {
     ) { }
 
     @Post()
-    async create(@Body() body: CreateTaskHttpDto) {
+    async create(@Body() body: CreateTaskHttpDto, @Request() req: { user: { id: string } }) {
         try {
-            return await this._tasksService.create(body);
+            return await this._tasksService.create(body, req.user.id);
         } catch (err) {
             if (err instanceof HttpException) throw err;
             throw new InternalServerErrorException(err.message);
@@ -27,9 +27,9 @@ export class TasksController {
     }
 
     @Get()
-    async findAll(@Query() pagination: PaginationQueryDto) {
+    async findAll(@Query() query: TaskQueryDto) {
         try {
-            return await this._tasksService.findAll(pagination);
+            return await this._tasksService.findAll(query);
         } catch (err) {
             if (err instanceof HttpException) throw err;
             throw new InternalServerErrorException(err.message);
