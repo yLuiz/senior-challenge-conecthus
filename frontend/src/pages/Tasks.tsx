@@ -1,4 +1,3 @@
-import { useAuth } from '@/context/AuthContext';
 import { useTasks } from '@/hooks/useTasks';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +13,6 @@ export function TasksPage() {
   const [showForm, setShowForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { tasks, isLoading, error, createTask, updateTask, removeTask } = useTasks(filters);
-  const { logout } = useAuth();
 
   const handleCreate = async (data: Partial<Task>) => {
     setIsSaving(true);
