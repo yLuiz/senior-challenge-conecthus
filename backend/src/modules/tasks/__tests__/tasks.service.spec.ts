@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException } from '@nestjs/common';
 import { TaskStatus } from '@prisma/client';
-import { PrismaService } from '../../infra/database/prisma/prisma.service';
-import { PaginatedResultDto } from '../../common/dtos/paginated-result.dto';
-import { TasksService } from './tasks.service';
+import { PrismaService } from '../../../infra/database/prisma/prisma.service';
+import { PaginatedResultDto } from '../../../common/dtos/paginated-result.dto';
+import { TasksService } from '../tasks.service';
 
 const mockPrisma = {
   task: {
