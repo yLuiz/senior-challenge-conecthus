@@ -12,6 +12,7 @@ import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { CreateUserHttpDto } from '../users/http-dtos/create-user.http-dto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './http-dtos/login.http-dto';
+import { HTTP_MESSAGES } from 'src/common/messages/http.messages';
 
 @Injectable()
 export class AuthService {
@@ -54,7 +55,7 @@ export class AuthService {
     const existing = await this._usersService.findByEmail(dto.email);
     if (existing) {
       this.logger.warn(`Register attempt with existing email: ${dto.email}`);
-      throw new ConflictException('Email already in use');
+      throw new ConflictException(HTTP_MESSAGES.USER.EMAIL_ALREADY_EXISTS);
     }
 
     const user = await this._usersService.create(dto);
@@ -68,13 +69,13 @@ export class AuthService {
     const user = await this._usersService.findByEmail(dto.email);
     if (!user) {
       this.logger.warn(`Failed login attempt — email not found: ${dto.email}`, AuthService.name);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(HTTP_MESSAGES.AUTH.INVALID_CREDENTIALS);
     }
 
     const valid = await bcrypt.compare(dto.password, user.password);
     if (!valid) {
       this.logger.warn(`Failed login attempt — wrong password for user: ${user.id}`);
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(HTTP_MESSAGES.AUTH.INVALID_CREDENTIALS);
     }
 
     this.logger.log(`User logged in: ${user.id}`, AuthService.name);
@@ -86,10 +87,10 @@ export class AuthService {
 
   async refresh(userId: string, email: string, jti: string, rawRefreshToken: string) {
     const stored = await this._prisma.refreshToken.findUnique({ where: { id: jti } });
-    if (!stored || stored.userId !== userId) throw new UnauthorizedException('Access denied');
+    if (!stored || stored.userId !== userId) throw new UnauthorizedException(HTTP_MESSAGES.AUTH.ACCESS_DENIED);
 
     const tokenMatches = await bcrypt.compare(rawRefreshToken, stored.token);
-    if (!tokenMatches) throw new UnauthorizedException('Access denied');
+    if (!tokenMatches) throw new UnauthorizedException(HTTP_MESSAGES.AUTH.ACCESS_DENIED);
 
     await this._prisma.refreshToken.delete({ where: { id: jti } });
 
