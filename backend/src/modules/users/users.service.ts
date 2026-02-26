@@ -32,7 +32,7 @@ export class UsersService {
     const emailAlreadyExists = await this.findByEmail(email);
     if (emailAlreadyExists) {
       this._logger.warn(`Register attempt with existing email: ${email}`);
-      throw new ConflictException(HTTP_MESSAGES.USER_EMAIL_ALREADY_EXISTS);
+      throw new ConflictException(HTTP_MESSAGES.USER.EMAIL_ALREADY_EXISTS);
     }
 
     const SALT = parseInt(process.env.PASSWORD_SALT, 10);
@@ -68,7 +68,7 @@ export class UsersService {
       select: { ...this._userFieldsToGet },
     });
 
-    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND);
+    if (!user) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
 
     return user;
   }
@@ -79,11 +79,11 @@ export class UsersService {
 
   async update(id: string, dto: UpdateUserHttpDto): Promise<OutputUserHttpDto> {
     const userExists = this.findById(id);
-    if (!userExists) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND);
+    if (!userExists) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
 
     if (dto.email) {
       const emailAlreadyExists = await this.findByEmail(dto.email);
-      if (emailAlreadyExists && emailAlreadyExists.id !== id) throw new ConflictException(HTTP_MESSAGES.USER_EMAIL_ALREADY_EXISTS);
+      if (emailAlreadyExists && emailAlreadyExists.id !== id) throw new ConflictException(HTTP_MESSAGES.USER.EMAIL_ALREADY_EXISTS);
     }
 
     return this._prisma.user.update({
@@ -96,7 +96,7 @@ export class UsersService {
   async delete(id: string) {
 
     const userExistis = await this.findById(id);
-    if (!userExistis) throw new NotFoundException(HTTP_MESSAGES.USER_NOT_FOUND);
+    if (!userExistis) throw new NotFoundException(HTTP_MESSAGES.USER.NOT_FOUND);
 
     return this._prisma.user.delete({ where: { id } });
   }
