@@ -38,9 +38,9 @@ export class TasksController {
 
     @ApiParam({ name: 'id', example: 'uuid-da-tarefa', required: true, description: 'UUID da tarefa' })
     @Get(':id')
-    async findById(@Param('id') id: string) {
+    async findById(@Param('id') id: string, @Request() req: { user: { id: string } }) {
         try {
-            return await this._tasksService.findById(id);
+            return await this._tasksService.findById(id, req.user.id);
         } catch (err) {
             if (err instanceof HttpException) throw err;
             throw new InternalServerErrorException(err.message);
@@ -49,9 +49,9 @@ export class TasksController {
 
     @ApiParam({ name: 'id', example: 'uuid-da-tarefa', required: true, description: 'UUID da tarefa' })
     @Patch(':id')
-    async update(@Param('id') id: string, @Body() body: UpdateTaskHttpDto) {
+    async update(@Param('id') id: string, @Body() body: UpdateTaskHttpDto, @Request() req: { user: { id: string } }) {
         try {
-            return await this._tasksService.update(id, body);
+            return await this._tasksService.update(id, body, req.user.id);
         } catch (err) {
             if (err instanceof HttpException) throw err;
             throw new InternalServerErrorException(err.message);
@@ -60,9 +60,9 @@ export class TasksController {
 
     @ApiParam({ name: 'id', example: 'uuid-da-tarefa', required: true, description: 'UUID da tarefa' })
     @Delete(':id')
-    async delete(@Param('id') id: string) {
+    async delete(@Param('id') id: string, @Request() req: { user: { id: string } }) {
         try {
-            await this._tasksService.delete(id);
+            await this._tasksService.delete(id, req.user.id);
             return { statusCode: HttpStatus.OK, message: 'Task deleted' };
         } catch (err) {
             if (err instanceof HttpException) throw err;

@@ -77,8 +77,14 @@ export function TasksScreen({ navigation }: Props) {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 350);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
   const [dueDateFromDisplay, setDueDateFromDisplay] = useState('');
   const [dueDateToDisplay, setDueDateToDisplay] = useState('');
   const [activePicker, setActivePicker] = useState<'from' | 'to' | null>(null);
@@ -174,9 +180,10 @@ export function TasksScreen({ navigation }: Props) {
     });
   }, [navigation, logout, user?.name]);
 
-  const hasActiveFilters = search !== '' || statusFilter !== '' || dueDateFromDisplay !== '' || dueDateToDisplay !== '';
+  const hasActiveFilters = searchInput !== '' || statusFilter !== '' || dueDateFromDisplay !== '' || dueDateToDisplay !== '';
 
   const clearFilters = () => {
+    setSearchInput('');
     setSearch('');
     setStatusFilter('');
     setDueDateFromDisplay('');
@@ -245,9 +252,8 @@ export function TasksScreen({ navigation }: Props) {
         style={styles.searchInput}
         placeholder="Buscar tarefas..."
         placeholderTextColor="#9ca3af"
-        value={search}
-        onChangeText={setSearch}
-        onSubmitEditing={() => fetchPage(1, 'replace')}
+        value={searchInput}
+        onChangeText={setSearchInput}
         returnKeyType="search"
       />
 

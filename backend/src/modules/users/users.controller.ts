@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpException, InternalServerErrorException, Param, Patch, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Delete, ForbiddenException, Get, HttpException, InternalServerErrorException, Param, Patch, Post, Query, Request, UseGuards } from "@nestjs/common";
 import { ApiBearerAuth, ApiParam, ApiTags } from "@nestjs/swagger";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import { PaginationQueryDto } from "../../common/dtos/pagination-query.dto";
@@ -35,8 +35,10 @@ export class UsersController {
     })
     @Get(':id')
     async findById(
-        @Param('id') id: string
+        @Param('id') id: string,
+        @Request() req: { user: { id: string } }
     ) {
+        if (req.user.id !== id) throw new ForbiddenException();
         try {
             return this._usersService.findById(id);
         }
@@ -66,8 +68,10 @@ export class UsersController {
     @Patch(':id')
     async update(
         @Param('id') id: string,
-        @Body() body: UpdateUserHttpDto
+        @Body() body: UpdateUserHttpDto,
+        @Request() req: { user: { id: string } }
     ) {
+        if (req.user.id !== id) throw new ForbiddenException();
         try {
             return this._usersService.update(id, body);
         }
@@ -84,7 +88,11 @@ export class UsersController {
         description: 'UUID do usuário'
     })
     @Delete(':id')
-    async delete(@Param('id') id: string) {
+    async delete(
+        @Param('id') id: string,
+        @Request() req: { user: { id: string } }
+    ) {
+        if (req.user.id !== id) throw new ForbiddenException();
         try {
             return this._usersService.delete(id);
         }

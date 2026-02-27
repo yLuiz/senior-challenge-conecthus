@@ -78,16 +78,16 @@ export class TasksService {
     return result;
   }
 
-  async findById(id: string): Promise<OutputTaskHttpDto> {
-    const task = await this._prisma.task.findUnique({ where: { id } });
+  async findById(id: string, userId: string): Promise<OutputTaskHttpDto> {
+    const task = await this._prisma.task.findUnique({ where: { id, userId } });
 
     if (!task) throw new NotFoundException(HTTP_MESSAGES.TASK.NOT_FOUND);
 
     return task;
   }
 
-  async update(id: string, dto: UpdateTaskHttpDto): Promise<OutputTaskHttpDto> {
-    await this.findById(id);
+  async update(id: string, dto: UpdateTaskHttpDto, userId: string): Promise<OutputTaskHttpDto> {
+    await this.findById(id, userId);
 
     const task = await this._prisma.task.update({
       where: { id },
@@ -104,8 +104,8 @@ export class TasksService {
     return task;
   }
 
-  async delete(id: string): Promise<void> {
-    const task = await this.findById(id);
+  async delete(id: string, userId: string): Promise<void> {
+    const task = await this.findById(id, userId);
 
     await this._prisma.task.delete({ where: { id } });
     await this._cache.delByPattern('tasks:all');

@@ -52,7 +52,11 @@ export function TasksPage() {
   };
 
   const handleStatusChange = async (task: Task, status: TaskStatus) => {
-    await updateTask(task.id, { status });
+    try {
+      await updateTask(task.id, { status });
+    } catch {
+      toast.error('Erro ao atualizar status');
+    }
   };
 
   const handleDelete = (id: string) => setPendingDeleteId(id);
