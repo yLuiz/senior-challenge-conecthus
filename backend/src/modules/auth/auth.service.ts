@@ -6,11 +6,13 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { randomUUID } from 'crypto';
 import { envConfig } from 'src/config/configuration';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { RedisService } from 'src/infra/cache/redis.service';
 import { CreateUserHttpDto } from '../users/http-dtos/create-user.http-dto';
+import { OutputUserHttpDto } from '../users/http-dtos/output-user.http-dto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './http-dtos/login.http-dto';
 import { HTTP_MESSAGES } from 'src/common/messages/http.messages';
@@ -83,7 +85,7 @@ export class AuthService {
 
     this.logger.log(`User logged in: ${user.id}`, AuthService.name);
 
-    const { password: _, ...safeUser } = user;
+    const safeUser = instanceToPlain(plainToInstance(OutputUserHttpDto, user));
     const tokens = await this._generateTokens(user.id, user.email);
     return { user: safeUser, ...tokens };
   }

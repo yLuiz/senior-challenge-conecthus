@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 export class UpdateUserHttpDto {
     @ApiProperty({ example: 'Luiz Victor' })
@@ -12,9 +12,12 @@ export class UpdateUserHttpDto {
     @IsOptional()
     email?: string;
 
-    @ApiProperty({ example: 'Senha@123', minLength: 6 })
+    @ApiProperty({ example: 'Senha@123', minLength: 8 })
     @IsString()
-    @MinLength(6)
+    @MinLength(8, { message: 'Senha deve ter no mínimo 8 caracteres.' })
+    @Matches(/^(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$/, {
+        message: 'A senha deve conter ao menos uma letra maiúscula, um número e um caractere especial.',
+    })
     @IsOptional()
     password?: string;
 }
