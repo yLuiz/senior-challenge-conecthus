@@ -1,11 +1,13 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ConfirmModal } from './ConfirmModal';
 import styles from './Layout.module.css';
 
 export function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -22,7 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
           {user && (
             <>
               <span className={styles.username}>Olá, {user.name}</span>
-              <button onClick={handleLogout} className={styles.logoutBtn}>
+              <button onClick={() => setShowLogoutConfirm(true)} className={styles.logoutBtn}>
                 Sair
               </button>
             </>
@@ -30,6 +32,16 @@ export function Layout({ children }: { children: ReactNode }) {
         </nav>
       </header>
       <main className={styles.main}>{children}</main>
+
+      {showLogoutConfirm && (
+        <ConfirmModal
+          title="Sair da conta"
+          message="Tem certeza que deseja sair?"
+          confirmLabel="Sair"
+          onConfirm={handleLogout}
+          onCancel={() => setShowLogoutConfirm(false)}
+        />
+      )}
     </div>
   );
 }

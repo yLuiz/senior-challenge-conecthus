@@ -127,7 +127,7 @@ export function TaskDetailScreen({ navigation, route }: Props) {
             <View style={styles.metaRow}>
               <Text style={styles.metaLabel}>Vencimento:</Text>
               <Text style={styles.metaValue}>
-                {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                {task.dueDate.split('T')[0].split('-').reverse().join('/')}
               </Text>
             </View>
           )}

@@ -8,7 +8,10 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { MaterialIcons } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList, TaskStatus } from '../types';
@@ -22,6 +25,21 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
   { value: 'DONE', label: 'Concluída' },
 ];
 
+// YYYY-MM-DD → DD/MM/YYYY
+const isoToDisplay = (iso: string): string => {
+  if (!iso) return '';
+  const [yyyy, mm, dd] = iso.split('-');
+  return `${dd}/${mm}/${yyyy}`;
+};
+
+// DD/MM/YYYY → YYYY-MM-DD (retorna '' se incompleto)
+const displayToISO = (display: string): string => {
+  const parts = display.split('/');
+  if (parts.length !== 3 || parts[2].length < 4) return '';
+  const [dd, mm, yyyy] = parts;
+  return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+};
+
 export function CreateTaskScreen({ navigation, route }: Props) {
   const taskId = route.params?.taskId;
   const isEditing = !!taskId;
@@ -30,7 +48,8 @@ export function CreateTaskScreen({ navigation, route }: Props) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [status, setStatus] = useState<TaskStatus>('TODO');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDateDisplay, setDueDateDisplay] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTask, setIsLoadingTask] = useState(isEditing);
 
@@ -42,7 +61,7 @@ export function CreateTaskScreen({ navigation, route }: Props) {
         setTitle(task.title);
         setDescription(task.description ?? '');
         setStatus(task.status);
-        setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
+        setDueDateDisplay(task.dueDate ? isoToDisplay(task.dueDate.split('T')[0]) : '');
       })
       .catch(() => {
         Alert.alert('Erro', 'Tarefa não encontrada');
@@ -62,7 +81,7 @@ export function CreateTaskScreen({ navigation, route }: Props) {
         title: title.trim(),
         description: description.trim() || undefined,
         status,
-        dueDate: dueDate || undefined,
+        dueDate: displayToISO(dueDateDisplay) || undefined,
       };
 
       if (isEditing && taskId) {
@@ -76,6 +95,37 @@ export function CreateTaskScreen({ navigation, route }: Props) {
       Alert.alert('Erro', err?.response?.data?.message ?? 'Falha ao salvar tarefa');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Aplica máscara DD/MM/AAAA conforme o usuário digita
+  const handleDateTyping = (text: string) => {
+    const digits = text.replace(/\D/g, '').slice(0, 8);
+    let masked = digits;
+    if (digits.length > 2) masked = `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    if (digits.length > 4) masked = `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+    setDueDateDisplay(masked);
+  };
+
+  // Data atual do picker: usa a data digitada ou hoje como fallback
+  const getPickerDate = (): Date => {
+    const iso = displayToISO(dueDateDisplay);
+    if (iso) {
+      const [yyyy, mm, dd] = iso.split('-').map(Number);
+      return new Date(yyyy, mm - 1, dd);
+    }
+    return new Date();
+  };
+
+  const onPickerChange = (_event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      const year = selectedDate.getFullYear();
+      const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(selectedDate.getDate()).padStart(2, '0');
+      setDueDateDisplay(`${day}/${month}/${year}`);
     }
   };
 
@@ -134,14 +184,43 @@ export function CreateTaskScreen({ navigation, route }: Props) {
           ))}
         </View>
 
-        <Text style={styles.label}>Data de Vencimento (YYYY-MM-DD)</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="2024-12-31"
-          placeholderTextColor="#9ca3af"
-          value={dueDate}
-          onChangeText={setDueDate}
-        />
+        <Text style={styles.label}>Data de Vencimento</Text>
+        <View style={styles.dateRow}>
+          <TextInput
+            style={[styles.input, { flex: 1 }]}
+            placeholder="DD/MM/AAAA"
+            placeholderTextColor="#9ca3af"
+            value={dueDateDisplay}
+            onChangeText={handleDateTyping}
+            keyboardType="number-pad"
+            maxLength={10}
+          />
+          <TouchableOpacity
+            style={styles.calendarBtn}
+            onPress={() => setShowDatePicker(true)}
+          >
+            <MaterialIcons name="calendar-today" size={20} color="#6366f1" />
+          </TouchableOpacity>
+        </View>
+
+        {showDatePicker && (
+          <>
+            <DateTimePicker
+              value={getPickerDate()}
+              mode="date"
+              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              onChange={onPickerChange}
+            />
+            {Platform.OS === 'ios' && (
+              <TouchableOpacity
+                style={styles.dateConfirmBtn}
+                onPress={() => setShowDatePicker(false)}
+              >
+                <Text style={styles.dateConfirmBtnText}>Confirmar</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
 
         <TouchableOpacity
           style={[styles.saveBtn, isLoading && styles.saveBtnDisabled]}
@@ -205,6 +284,22 @@ const styles = StyleSheet.create({
   statusBtnActive: { backgroundColor: '#6366f1', borderColor: '#6366f1' },
   statusBtnText: { fontSize: 13, color: '#374151' },
   statusBtnTextActive: { color: '#fff', fontWeight: '600' },
+  dateRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  calendarBtn: {
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    padding: 12,
+  },
+  dateConfirmBtn: {
+    backgroundColor: '#6366f1',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  dateConfirmBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   saveBtn: {
     backgroundColor: '#6366f1',
     borderRadius: 12,

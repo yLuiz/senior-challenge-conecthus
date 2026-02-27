@@ -167,16 +167,16 @@ describe('TasksService', () => {
       const task = { id: '1', title: 'Task', userId: 'user1' };
       mockPrisma.task.findUnique.mockResolvedValue(task);
 
-      const result = await service.findById('1');
+      const result = await service.findById('1', 'user1');
 
       expect(result).toEqual(task);
-      expect(mockPrisma.task.findUnique).toHaveBeenCalledWith({ where: { id: '1' } });
+      expect(mockPrisma.task.findUnique).toHaveBeenCalledWith({ where: { id: '1', userId: 'user1' } });
     });
 
     it('should throw NotFoundException when task does not exist', async () => {
       mockPrisma.task.findUnique.mockResolvedValue(null);
 
-      await expect(service.findById('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.findById('nonexistent', 'user1')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -187,7 +187,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue(existing);
       mockPrisma.task.update.mockResolvedValue(updated);
 
-      const result = await service.update('1', { title: 'New' });
+      const result = await service.update('1', { title: 'New' }, 'user1');
 
       expect(result).toEqual(updated);
       expect(mockPrisma.task.update).toHaveBeenCalledWith({
@@ -202,7 +202,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue(existing);
       mockPrisma.task.update.mockResolvedValue(updated);
 
-      await service.update('1', { title: 'New' });
+      await service.update('1', { title: 'New' }, 'user1');
 
       expect(mockCache.delByPattern).toHaveBeenCalledWith('tasks:all');
     });
@@ -213,7 +213,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue(existing);
       mockPrisma.task.update.mockResolvedValue(updated);
 
-      await service.update('1', { title: 'New' });
+      await service.update('1', { title: 'New' }, 'user1');
 
       expect(mockMqtt.publishTaskUpdated).toHaveBeenCalledWith('user1', { id: '1', title: 'New' });
     });
@@ -221,7 +221,7 @@ describe('TasksService', () => {
     it('should throw NotFoundException when task does not exist', async () => {
       mockPrisma.task.findUnique.mockResolvedValue(null);
 
-      await expect(service.update('nonexistent', { title: 'New' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('nonexistent', { title: 'New' }, 'user1')).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -230,7 +230,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue({ id: '1', userId: 'user1', title: 'Task' });
       mockPrisma.task.delete.mockResolvedValue({});
 
-      await expect(service.delete('1')).resolves.toBeUndefined();
+      await expect(service.delete('1', 'user1')).resolves.toBeUndefined();
       expect(mockPrisma.task.delete).toHaveBeenCalledWith({ where: { id: '1' } });
     });
 
@@ -238,7 +238,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue({ id: '1', userId: 'user1', title: 'Task' });
       mockPrisma.task.delete.mockResolvedValue({});
 
-      await service.delete('1');
+      await service.delete('1', 'user1');
 
       expect(mockCache.delByPattern).toHaveBeenCalledWith('tasks:all');
     });
@@ -248,7 +248,7 @@ describe('TasksService', () => {
       mockPrisma.task.findUnique.mockResolvedValue(task);
       mockPrisma.task.delete.mockResolvedValue({});
 
-      await service.delete('1');
+      await service.delete('1', 'user1');
 
       expect(mockMqtt.publishTaskDeleted).toHaveBeenCalledWith('user1', { id: '1', title: 'Task' });
     });
@@ -256,7 +256,7 @@ describe('TasksService', () => {
     it('should throw NotFoundException when task does not exist', async () => {
       mockPrisma.task.findUnique.mockResolvedValue(null);
 
-      await expect(service.delete('nonexistent')).rejects.toThrow(NotFoundException);
+      await expect(service.delete('nonexistent', 'user1')).rejects.toThrow(NotFoundException);
     });
   });
 });

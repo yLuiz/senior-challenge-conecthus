@@ -22,7 +22,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "seed:user": "ts-node -r tsconfig-paths/register prisma/seed-user.ts",
-    "seed:tasks": "ts-node -r tsconfig-paths/register prisma/seed-tasks.ts"
+    "seed:tasks": "ts-node -r tsconfig-paths/register prisma/seed-tasks.ts",
+    "test:e2e:real": "jest --config ./__test__/jest-e2e.json --testPathPattern=\"app.e2e-spec\""
   },
   "dependencies": {
     "@nestjs/cache-manager": "^3.1.0",

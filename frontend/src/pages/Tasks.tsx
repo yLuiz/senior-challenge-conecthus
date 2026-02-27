@@ -2,6 +2,7 @@ import { useTasks } from '@/hooks/useTasks';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
+import { ConfirmModal } from '../components/ConfirmModal';
 import { Layout } from '../components/Layout';
 import { TaskCard } from '../components/TaskCard';
 import { TaskCardSkeleton } from '../components/TaskCardSkeleton';
@@ -15,6 +16,7 @@ export function TasksPage() {
   const [searchInput, setSearchInput] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -50,17 +52,23 @@ export function TasksPage() {
   };
 
   const handleStatusChange = async (task: Task, status: TaskStatus) => {
-    await updateTask(task.id, { status });
+    try {
+      await updateTask(task.id, { status });
+    } catch {
+      toast.error('Erro ao atualizar status');
+    }
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Deseja excluir esta tarefa?')) {
-      try {
-        await removeTask(id);
-        toast.success('Tarefa excluída!');
-      } catch {
-        toast.error('Erro ao excluir tarefa');
-      }
+  const handleDelete = (id: string) => setPendingDeleteId(id);
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return;
+    setPendingDeleteId(null);
+    try {
+      await removeTask(pendingDeleteId);
+      toast.success('Tarefa excluída!');
+    } catch {
+      toast.error('Erro ao excluir tarefa');
     }
   };
 
@@ -179,6 +187,16 @@ export function TasksPage() {
           <span className={styles.spinner} />
           <span>Carregando mais tarefas...</span>
         </div>
+      )}
+
+      {pendingDeleteId && (
+        <ConfirmModal
+          title="Excluir tarefa"
+          message="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          onConfirm={confirmDelete}
+          onCancel={() => setPendingDeleteId(null)}
+        />
       )}
     </Layout>
   );
