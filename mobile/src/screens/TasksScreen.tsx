@@ -166,7 +166,7 @@ export function TasksScreen({ navigation }: Props) {
       {item.dueDate ? (
         <View style={styles.dueDateRow}>
           <MaterialIcons name="calendar-today" size={11} color="#9ca3af" />
-          <Text style={styles.dueDate}>{new Date(item.dueDate).toLocaleDateString('pt-BR')}</Text>
+          <Text style={styles.dueDate}>{item.dueDate.split('T')[0].split('-').reverse().join('/')}</Text>
         </View>
       ) : null}
 
