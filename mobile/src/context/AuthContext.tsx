@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
 import { authApi } from '../api/auth';
+import { registerAuthCallbacks } from '../api/axios';
 
 interface AuthContextData {
   user: User | null;
@@ -19,6 +20,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Must run before the loading effect so callbacks are ready when getMe() fires
+  useEffect(() => {
+    registerAuthCallbacks({
+      onSessionExpired: () => {
+        setToken(null);
+        setUser(null);
+      },
+      onTokenRefreshed: (newToken) => {
+        setToken(newToken);
+      },
+    });
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -27,13 +41,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(storedToken);
           const me = await authApi.getMe();
           setUser(me);
+          // onTokenRefreshed callback handles token sync if the interceptor silently refreshed
         }
       } catch {
-        await Promise.all([
-          AsyncStorage.removeItem('token'),
-          AsyncStorage.removeItem('refreshToken'),
-          AsyncStorage.removeItem('user'),
-        ]);
+        // onSessionExpired callback handles clearing React state if refresh failed;
+        // storage is already cleared by the interceptor
       } finally {
         setIsLoading(false);
       }

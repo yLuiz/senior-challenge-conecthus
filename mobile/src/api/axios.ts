@@ -1,4 +1,4 @@
-import axios, { AxiosRequestConfig } from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://192.168.101.10:3000/api';
@@ -21,6 +21,18 @@ let isRefreshing = false;
 type QueueEntry = { resolve: (token: string) => void; reject: (err: unknown) => void };
 let failedQueue: QueueEntry[] = [];
 
+// Callbacks registered by AuthContext to react to auth state changes
+let onSessionExpiredCb: (() => void) | null = null;
+let onTokenRefreshedCb: ((newToken: string) => void) | null = null;
+
+export function registerAuthCallbacks(callbacks: {
+  onSessionExpired?: () => void;
+  onTokenRefreshed?: (newToken: string) => void;
+}): void {
+  if (callbacks.onSessionExpired) onSessionExpiredCb = callbacks.onSessionExpired;
+  if (callbacks.onTokenRefreshed) onTokenRefreshedCb = callbacks.onTokenRefreshed;
+}
+
 function processQueue(error: unknown, newToken: string | null): void {
   failedQueue.forEach(({ resolve, reject }) => {
     error ? reject(error) : resolve(newToken!);
@@ -34,14 +46,16 @@ async function clearAuthStorage(): Promise<void> {
     AsyncStorage.removeItem('refreshToken'),
     AsyncStorage.removeItem('user'),
   ]);
+  onSessionExpiredCb?.();
 }
 
 // Only set Authorization if not already present — preserves the refresh/logout
-// token set explicitly by authApi.refresh() and authApi.logout()
+// token set explicitly by authApi.refresh() and authApi.logout().
+// Uses AxiosHeaders.get() for reliable case-insensitive lookup.
 api.interceptors.request.use(async (config) => {
-  if (!config.headers.Authorization) {
+  if (!config.headers.get('Authorization')) {
     const token = await AsyncStorage.getItem('token');
-    if (token) config.headers.Authorization = `Bearer ${token}`;
+    if (token) config.headers.set('Authorization', `Bearer ${token}`);
   }
   return config;
 });
@@ -49,7 +63,7 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
+    const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
 
     if (error.response?.status !== 401) return Promise.reject(error);
 
@@ -70,10 +84,7 @@ api.interceptors.response.use(
         failedQueue.push({ resolve, reject });
       })
         .then((newToken) => {
-          originalRequest.headers = {
-            ...(originalRequest.headers ?? {}),
-            Authorization: `Bearer ${newToken}`,
-          };
+          originalRequest.headers.set('Authorization', `Bearer ${newToken}`);
           return api(originalRequest);
         })
         .catch((err) => Promise.reject(err));
@@ -101,11 +112,8 @@ api.interceptors.response.use(
         AsyncStorage.setItem('user', JSON.stringify(data.user)),
       ]);
 
-      originalRequest.headers = {
-        ...(originalRequest.headers ?? {}),
-        Authorization: `Bearer ${data.access_token}`,
-      };
-
+      originalRequest.headers.set('Authorization', `Bearer ${data.access_token}`);
+      onTokenRefreshedCb?.(data.access_token);
       processQueue(null, data.access_token);
       return api(originalRequest);
     } catch (refreshError) {
