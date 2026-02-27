@@ -45,10 +45,14 @@ export function RegisterScreen({ navigation }: Props) {
     setIsLoading(true);
     try {
       await register(name.trim(), email.trim().toLowerCase(), password);
-    } catch (err: any) {
-      const msg = err?.response?.data?.message ?? 'Erro ao criar conta';
-      console.log(err.error);
-      Alert.alert('Erro', Array.isArray(msg) ? msg.join('\n') : msg);
+    } catch (err) {
+      const e = err as { response?: { data?: { message?: string | string[] } } };
+      if (!e.response) {
+        Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.');
+      } else {
+        const msg = e.response.data?.message ?? 'Erro ao criar conta';
+        Alert.alert('Erro', Array.isArray(msg) ? msg.join('\n') : msg);
+      }
     } finally {
       setIsLoading(false);
     }
