@@ -29,8 +29,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(me);
         }
       } catch {
-        await AsyncStorage.removeItem('token');
-        await AsyncStorage.removeItem('user');
+        await Promise.all([
+          AsyncStorage.removeItem('token'),
+          AsyncStorage.removeItem('refreshToken'),
+          AsyncStorage.removeItem('user'),
+        ]);
       } finally {
         setIsLoading(false);
       }
@@ -42,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await Promise.all([
       AsyncStorage.setItem('token', data.access_token),
+      AsyncStorage.setItem('refreshToken', data.refresh_token),
       AsyncStorage.setItem('user', JSON.stringify(data.user)),
     ]);
 
@@ -54,7 +58,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await Promise.all([
       AsyncStorage.setItem('token', data.access_token),
-      AsyncStorage.setItem('user', JSON.stringify(data.user))
+      AsyncStorage.setItem('refreshToken', data.refresh_token),
+      AsyncStorage.setItem('user', JSON.stringify(data.user)),
     ]);
 
     setToken(data.access_token);
@@ -62,8 +67,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem('refreshToken');
+      if (refreshToken) await authApi.logout(refreshToken);
+    } catch {
+      // intentional: local session must be cleared regardless of server response
+    }
+
     await Promise.all([
       AsyncStorage.removeItem('token'),
+      AsyncStorage.removeItem('refreshToken'),
       AsyncStorage.removeItem('user'),
     ]);
 

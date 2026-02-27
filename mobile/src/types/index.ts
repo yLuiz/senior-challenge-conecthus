@@ -8,6 +8,7 @@ export interface User {
 export interface AuthResponse {
   user: User;
   access_token: string;
+  refresh_token: string;
 }
 
 export type RootStackParamList = {

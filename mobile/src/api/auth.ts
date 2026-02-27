@@ -9,4 +9,14 @@ export const authApi = {
     api.post<AuthResponse>('v1/auth/login', data).then(response => response.data),
 
   getMe: () => api.get<User>('v1/auth/me').then(response => response.data),
+
+  refresh: (refreshToken: string) =>
+    api.post<AuthResponse>('v1/auth/refresh', null, {
+      headers: { Authorization: `Bearer ${refreshToken}` },
+    }).then((r) => r.data),
+
+  logout: (refreshToken: string) =>
+    api.post<void>('v1/auth/logout', null, {
+      headers: { Authorization: `Bearer ${refreshToken}` },
+    }).then((r) => r.data),
 };
