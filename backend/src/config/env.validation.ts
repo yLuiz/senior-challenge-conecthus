@@ -41,6 +41,14 @@ class EnvironmentVariables {
 
   @IsString()
   @IsOptional()
+  REDIS_USER?: string;
+
+  @IsString()
+  @IsOptional()
+  REDIS_PASSWORD?: string;
+
+  @IsString()
+  @IsOptional()
   MQTT_BROKER_URL?: string;
 
   @IsNumber()

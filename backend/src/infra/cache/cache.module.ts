@@ -9,15 +9,20 @@ import { RedisService } from './redis.service';
   imports: [
     NestCacheModule.registerAsync({
       isGlobal: true,
-      useFactory: async () => ({
-        store: await redisStore({
-          socket: {
-            host: envConfig().REDIS.HOST,
-            port: envConfig().REDIS.PORT,
-          },
-        }),
-        ttl: envConfig().REDIS.TTL,
-      }),
+      useFactory: async () => {
+        const redis = envConfig().REDIS;
+        return {
+          store: await redisStore({
+            socket: {
+              host: redis.HOST,
+              port: redis.PORT,
+            },
+            ...(redis.USER && { username: redis.USER }),
+            ...(redis.PASSWORD && { password: redis.PASSWORD }),
+          }),
+          ttl: redis.TTL,
+        };
+      },
     }),
   ],
   providers: [RedisService],
