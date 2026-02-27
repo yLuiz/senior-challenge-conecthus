@@ -236,6 +236,79 @@ Variáveis do `mobile/.env`:
 
 > Em iOS Simulator `localhost` funciona normalmente.
 
+### Build do APK (EAS Build)
+
+Para gerar um `.apk` ou `.aab` distribuível é necessário o **EAS** (Expo Application Services). As variáveis de ambiente do build são configuradas no `mobile/eas.json` — diferentemente do `.env`, que só funciona em modo dev local.
+
+> **Por que não usar o `.env` no build?**
+> Em builds EAS o bundle é compilado remotamente nos servidores da Expo. O arquivo `.env` local nunca é enviado para esses servidores. As variáveis precisam estar declaradas no `eas.json` para serem "embutidas" no bundle no momento da compilação.
+
+#### 1. Pré-requisitos
+
+```bash
+npm install -g eas-cli   # instala o EAS CLI globalmente
+eas login                # autentique com sua conta Expo (expo.dev)
+```
+
+#### 2. Configurar variáveis de ambiente
+
+```bash
+cd mobile
+cp eas.example.json eas.json
+```
+
+Edite `mobile/eas.json` e preencha as variáveis em **todos** os profiles (`development`, `preview`, `production`):
+
+| Variável               | Formato exigido | Descrição                                   |
+|------------------------|-----------------|---------------------------------------------|
+| `EXPO_PUBLIC_API_URL`  | `https://...`   | URL da API backend (obrigatório no build)   |
+| `EXPO_PUBLIC_MQTT_URL` | `wss://...`     | URL WebSocket do broker MQTT (opcional)     |
+
+Exemplo de `eas.json` preenchido:
+
+```json
+{
+  "build": {
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://minha-api.up.railway.app/api",
+        "EXPO_PUBLIC_MQTT_URL": "wss://meu-broker-mqtt.up.railway.app"
+      },
+      "android": { "buildType": "apk" }
+    }
+  }
+}
+```
+
+> **Protocolo obrigatório:** `EXPO_PUBLIC_API_URL` deve começar com `https://` e `EXPO_PUBLIC_MQTT_URL` com `wss://`. URLs sem o protocolo correto causam erro de validação no startup do app.
+>
+> **MQTT opcional:** se você não tiver um broker MQTT em produção, deixe `EXPO_PUBLIC_MQTT_URL` como string vazia `""`. O app funcionará normalmente, apenas sem notificações em tempo real.
+
+#### 3. Gerar o build
+
+```bash
+cd mobile
+
+# APK (Android Package — instalável diretamente no dispositivo)
+eas build --platform android --profile preview
+
+# AAB (Android App Bundle — para publicar na Play Store)
+eas build --platform android --profile production
+```
+
+Na primeira vez, o EAS perguntará se deseja gerar um **Android Keystore** automaticamente. Responda **yes** para que ele crie e gerencie o keystore por você.
+
+O build roda nos servidores da Expo. Ao final, um link para download do `.apk` ou `.aab` é exibido no terminal e também fica disponível em [expo.dev](https://expo.dev).
+
+#### Profiles disponíveis
+
+| Profile       | Saída  | Uso                                       |
+|---------------|--------|-------------------------------------------|
+| `development` | APK    | Build de desenvolvimento com DevClient    |
+| `preview`     | APK    | Testes internos — instalável diretamente  |
+| `production`  | AAB    | Publicação na Play Store                  |
+
 ---
 
 ## Seeds (dados iniciais para teste manual)
