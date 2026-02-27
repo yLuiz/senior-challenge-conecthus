@@ -19,6 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export function LoginScreen({ navigation }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
 
@@ -57,14 +58,19 @@ export function LoginScreen({ navigation }: Props) {
           autoCorrect={false}
         />
 
-        <TextInput
-          style={styles.input}
-          placeholder="Senha"
-          placeholderTextColor="#9ca3af"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.inputWithToggle}
+            placeholder="Senha"
+            placeholderTextColor="#9ca3af"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+          />
+          <TouchableOpacity style={styles.eyeBtn} onPress={() => setShowPassword((v) => !v)}>
+            <Text style={styles.eyeText}>{showPassword ? 'Ocultar' : 'Ver'}</Text>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={[styles.btn, isLoading && styles.btnDisabled]}
@@ -143,6 +149,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
+  },
+  inputWrapper: {
+    position: 'relative',
+    marginBottom: 14,
+  },
+  inputWithToggle: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingRight: 72,
+    fontSize: 15,
+    color: '#111827',
+  },
+  eyeBtn: {
+    position: 'absolute',
+    right: 14,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  eyeText: {
+    fontSize: 13,
+    color: '#6366f1',
+    fontWeight: '600',
   },
   link: {
     textAlign: 'center',
