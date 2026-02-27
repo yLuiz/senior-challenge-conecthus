@@ -115,3 +115,23 @@
   margin: 0 0 1.5rem;
   color: #111827;
 }
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1.25rem;
+  }
+
+  .actions {
+    flex-direction: column;
+  }
+
+  .editBtn,
+  .deleteBtn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .title {
+    font-size: 1.2rem;
+  }
+}

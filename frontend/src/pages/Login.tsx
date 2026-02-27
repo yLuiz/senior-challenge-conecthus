@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import type { ApiError } from '../types';
 import styles from './Auth.module.css';
+import logo from '../assets/conecthus_logo.png';
 
 export function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,6 +38,7 @@ export function LoginPage() {
   return (
     <div className={styles.container}>
       <div className={styles.card}>
+        <img src={logo} alt="Conecthus" className={styles.logoCircle} />
         <h1 className={styles.title}>Task Manager</h1>
         <h2 className={styles.subtitle}>Entrar na sua conta</h2>
 

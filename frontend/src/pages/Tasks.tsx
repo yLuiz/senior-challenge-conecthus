@@ -1,8 +1,10 @@
 import { useTasks } from '@/hooks/useTasks';
 import { useEffect, useState } from 'react';
+import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
 import { TaskCard } from '../components/TaskCard';
+import { TaskCardSkeleton } from '../components/TaskCardSkeleton';
 import { TaskForm } from '../components/TaskForm';
 import { Task, TaskFilters, TaskStatus } from '../types';
 import styles from './Tasks.module.css';
@@ -27,6 +29,9 @@ export function TasksPage() {
     try {
       await createTask(data);
       setShowForm(false);
+      toast.success('Tarefa criada com sucesso!');
+    } catch {
+      toast.error('Erro ao criar tarefa');
     } finally {
       setIsSaving(false);
     }
@@ -38,7 +43,12 @@ export function TasksPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Deseja excluir esta tarefa?')) {
-      await removeTask(id);
+      try {
+        await removeTask(id);
+        toast.success('Tarefa excluída!');
+      } catch {
+        toast.error('Erro ao excluir tarefa');
+      }
     }
   };
 
@@ -124,7 +134,6 @@ export function TasksPage() {
       )}
 
       {/* Task list */}
-      {isLoading && <p className={styles.state}>Carregando tarefas...</p>}
       {error && <p className={styles.stateError}>{error}</p>}
 
       {!isLoading && !error && tasks.length === 0 && (
@@ -137,15 +146,17 @@ export function TasksPage() {
       )}
 
       <div className={styles.grid}>
-        {tasks.map((task) => (
-          <TaskCard
-            key={task.id}
-            task={task}
-            onClick={() => navigate(`/tasks/${task.id}`)}
-            onDelete={() => handleDelete(task.id)}
-            onStatusChange={(status) => handleStatusChange(task, status)}
-          />
-        ))}
+        {isLoading
+          ? Array.from({ length: 6 }).map((_, i) => <TaskCardSkeleton key={i} />)
+          : tasks.map((task) => (
+              <TaskCard
+                key={task.id}
+                task={task}
+                onClick={() => navigate(`/tasks/${task.id}`)}
+                onDelete={() => handleDelete(task.id)}
+                onStatusChange={(status) => handleStatusChange(task, status)}
+              />
+            ))}
       </div>
     </Layout>
   );

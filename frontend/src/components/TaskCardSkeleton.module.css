@@ -1,0 +1,78 @@
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e4e4e4 50%, #f0f0f0 75%);
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s infinite linear;
+  border-radius: 4px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.title {
+  height: 1rem;
+  flex: 1;
+}
+
+.badge {
+  height: 1.25rem;
+  width: 5.5rem;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.descLine {
+  height: 0.75rem;
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+.descLineShort {
+  height: 0.75rem;
+  width: 60%;
+  margin-bottom: 0.6rem;
+}
+
+.dueDate {
+  height: 0.65rem;
+  width: 38%;
+  margin-bottom: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.select {
+  height: 1.9rem;
+  flex: 1;
+  border-radius: 6px;
+}
+
+.deleteBtn {
+  height: 1.9rem;
+  width: 1.9rem;
+  flex-shrink: 0;
+  border-radius: 4px;
+}
