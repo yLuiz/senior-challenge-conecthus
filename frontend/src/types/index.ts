@@ -36,3 +36,7 @@ export interface ApiError {
   statusCode?: number;
   error?: string;
 }
+
+export interface ApiResponse<T> {
+  data: T;
+}
