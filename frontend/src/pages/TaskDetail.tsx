@@ -4,6 +4,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import EditIcon from '@mui/icons-material/Edit';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { ConfirmModal } from '../components/ConfirmModal';
 import toast from 'react-hot-toast';
 import { Layout } from '../components/Layout';
 import { TaskForm } from '../components/TaskForm';
@@ -24,6 +25,7 @@ export function TaskDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -50,7 +52,8 @@ export function TaskDetailPage() {
   };
 
   const handleDelete = async () => {
-    if (!task || !confirm('Deseja excluir esta tarefa?')) return;
+    if (!task) return;
+    setShowDeleteConfirm(false);
     try {
       await tasksApi.remove(task.id);
       toast.success('Tarefa excluída!');
@@ -119,13 +122,22 @@ export function TaskDetailPage() {
               <button onClick={() => setIsEditing(true)} className={styles.editBtn}>
                 <EditIcon sx={{ fontSize: 16 }} /> Editar
               </button>
-              <button onClick={handleDelete} className={styles.deleteBtn}>
+              <button onClick={() => setShowDeleteConfirm(true)} className={styles.deleteBtn}>
                 <DeleteOutlineIcon sx={{ fontSize: 16 }} /> Excluir
               </button>
             </div>
           </>
         )}
       </div>
+      {showDeleteConfirm && (
+        <ConfirmModal
+          title="Excluir tarefa"
+          message="Tem certeza que deseja excluir esta tarefa? Esta ação não pode ser desfeita."
+          confirmLabel="Excluir"
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteConfirm(false)}
+        />
+      )}
     </Layout>
   );
 }
