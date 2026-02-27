@@ -1,3 +1,4 @@
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Task, TaskStatus } from '../types';
 import styles from './TaskCard.module.css';
@@ -34,7 +35,8 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange }: TaskCardPr
         </span>
       </div>
 
-       <p className={styles.dueDate}>
+      <p className={styles.dueDate}>
+        <CalendarTodayIcon sx={{ fontSize: 12 }} />
         {task.dueDate
           ? `Vence: ${task.dueDate.split('T')[0].split('-').reverse().join('/')}`
           : 'Vence: -'}
