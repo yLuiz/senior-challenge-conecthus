@@ -1,18 +1,37 @@
 import 'dotenv/config';
-import { Logger, ValidationPipe } from '@nestjs/common';
-import { NestFactory } from '@nestjs/core';
+import { ClassSerializerInterceptor, Logger, ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import helmet from 'helmet';
+import { validateEnv } from './config/env.validation';
 
 async function bootstrap() {
+  validateEnv(process.env as Record<string, unknown>);
 
   const logger = new Logger();
 
   const app = await NestFactory.create(AppModule);
 
+  app.use(helmet());
+
+  const allowedOrigins = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: '*',
+    origin: (requestOrigin, callback) => {
+      // Requests sem origin (mobile, Postman, curl) são sempre permitidos
+      if (!requestOrigin || allowedOrigins.includes(requestOrigin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`Origem não permitida por CORS: ${requestOrigin}`));
+      }
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   app.useGlobalPipes(
@@ -22,6 +41,8 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   app.setGlobalPrefix('api');
 

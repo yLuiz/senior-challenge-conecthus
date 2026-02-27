@@ -15,8 +15,8 @@ export const authApi = {
       headers: { Authorization: `Bearer ${refreshToken}` },
     }).then((r) => r.data),
 
-  logout: (refreshToken: string) =>
-    api.post<void>('v1/auth/logout', null, {
+  logout: (refreshToken: string, accessToken?: string) =>
+    api.post<void>('v1/auth/logout', { access_token: accessToken }, {
       headers: { Authorization: `Bearer ${refreshToken}` },
     }).then((r) => r.data),
 };

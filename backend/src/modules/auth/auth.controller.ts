@@ -1,7 +1,9 @@
 import { Controller, Post, Get, Body, UseGuards, Request, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { LoginDto } from './http-dtos/login.http-dto';
+import { LogoutHttpDto } from './http-dtos/logout.http-dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 import { CreateUserHttpDto } from '../users/http-dtos/create-user.http-dto';
@@ -12,12 +14,14 @@ export class AuthController {
   constructor(private auth: AuthService) {}
 
   @Post('register')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @ApiOperation({ summary: 'Register a new user' })
   register(@Body() dto: CreateUserHttpDto) {
     return this.auth.register(dto);
   }
 
   @Post('login')
+  @Throttle({ default: { ttl: 60_000, limit: 5 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login and receive access + refresh tokens' })
   login(@Body() dto: LoginDto) {
@@ -37,9 +41,9 @@ export class AuthController {
   @UseGuards(JwtRefreshGuard)
   @HttpCode(HttpStatus.OK)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Logout current session (invalidates this refresh token)' })
-  logout(@Request() req) {
-    return this.auth.logout(req.user.sub, req.user.jti);
+  @ApiOperation({ summary: 'Logout current session (invalidates refresh token + blacklists access token)' })
+  logout(@Request() req, @Body() dto: LogoutHttpDto) {
+    return this.auth.logout(req.user.sub, req.user.jti, dto.access_token);
   }
 
   @Get('me')

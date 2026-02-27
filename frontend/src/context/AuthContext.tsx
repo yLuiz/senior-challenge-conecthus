@@ -61,10 +61,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     const refreshToken = localStorage.getItem('refresh_token');
+    const accessToken = localStorage.getItem('token');
     clearSession();
 
     if (refreshToken) {
-      void authApi.logout(refreshToken).catch(() => undefined);
+      void authApi.logout(refreshToken, accessToken ?? undefined).catch(() => undefined);
     }
   };
 

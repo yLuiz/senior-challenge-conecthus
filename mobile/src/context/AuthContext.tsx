@@ -88,8 +88,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     mqttService.disconnect();
     try {
-      const refreshToken = await AsyncStorage.getItem('refreshToken');
-      if (refreshToken) await authApi.logout(refreshToken);
+      const [refreshToken, accessToken] = await Promise.all([
+        AsyncStorage.getItem('refreshToken'),
+        AsyncStorage.getItem('token'),
+      ]);
+      if (refreshToken) await authApi.logout(refreshToken, accessToken ?? undefined);
     } catch {
       // intentional: local session must be cleared regardless of server response
     }

@@ -4,6 +4,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import * as bcrypt from 'bcryptjs';
 import { envConfig } from 'src/config/configuration';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
+import { RedisService } from 'src/infra/cache/redis.service';
 import { UsersService } from '../../users/users.service';
 import { AuthService } from '../auth.service';
 
@@ -28,6 +29,12 @@ const mockJwtService = {
   decode: jest.fn().mockReturnValue({ exp: Math.floor(Date.now() / 1000) + 3600 }),
 };
 
+const mockRedis = {
+  get: jest.fn().mockResolvedValue(undefined),
+  set: jest.fn().mockResolvedValue(undefined),
+  del: jest.fn().mockResolvedValue(undefined),
+};
+
 let PASSWORD_SALT: number;
 
 describe('AuthService', () => {
@@ -42,6 +49,7 @@ describe('AuthService', () => {
         { provide: PrismaService, useValue: mockPrisma },
         { provide: UsersService, useValue: mockUsersService },
         { provide: JwtService, useValue: mockJwtService },
+        { provide: RedisService, useValue: mockRedis },
       ],
     }).compile();
 
@@ -185,6 +193,25 @@ describe('AuthService', () => {
       expect(mockPrisma.refreshToken.deleteMany).toHaveBeenCalledWith({
         where: { id: 'jti-123', userId: 'user-1' },
       });
+    });
+
+    it('should blacklist the access token in Redis when provided', async () => {
+      const futureExp = Math.floor(Date.now() / 1000) + 3600;
+      mockJwtService.decode.mockReturnValue({ jti: 'access-jti-abc', exp: futureExp });
+
+      await service.logout('user-1', 'jti-123', 'mock-access-token');
+
+      expect(mockRedis.set).toHaveBeenCalledWith(
+        'blacklist:access:access-jti-abc',
+        '1',
+        expect.any(Number),
+      );
+    });
+
+    it('should not call Redis when no access token is provided', async () => {
+      await service.logout('user-1', 'jti-123');
+
+      expect(mockRedis.set).not.toHaveBeenCalled();
     });
   });
 
