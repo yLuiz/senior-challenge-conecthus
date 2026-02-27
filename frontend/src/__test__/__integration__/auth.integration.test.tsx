@@ -16,6 +16,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AxiosError } from 'axios';
 import { AuthProvider } from '../../context/AuthContext';
 import { LoginPage } from '../../pages/Login';
 import { ProtectedRoute } from '../../components/ProtectedRoute';
@@ -142,9 +143,15 @@ describe('Fluxo de Autenticação (integração)', () => {
 
     it('exibe a mensagem de erro retornada pela API em falha de login', async () => {
       mockedAuthApi.getMe.mockRejectedValue(new Error('Unauthorized'));
-      mockedAuthApi.login.mockRejectedValue({
-        response: { data: { message: 'Credenciais inválidas' } },
-      });
+      const axiosError = new AxiosError('Credenciais inválidas');
+      axiosError.response = {
+        data: { message: 'Credenciais inválidas' },
+        status: 401,
+        statusText: 'Unauthorized',
+        headers: {},
+        config: { headers: {} as never },
+      };
+      mockedAuthApi.login.mockRejectedValue(axiosError);
 
       renderAuthFlow('/login');
 

@@ -9,6 +9,7 @@ import * as bcrypt from 'bcryptjs';
 import { randomUUID } from 'crypto';
 import { envConfig } from 'src/config/configuration';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
+import { RedisService } from 'src/infra/cache/redis.service';
 import { CreateUserHttpDto } from '../users/http-dtos/create-user.http-dto';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './http-dtos/login.http-dto';
@@ -22,14 +23,16 @@ export class AuthService {
     private _prisma: PrismaService,
     private _usersService: UsersService,
     private _jwtService: JwtService,
+    private _redis: RedisService,
   ) {}
 
   private async _generateTokens(userId: string, email: string) {
     const jti = randomUUID();
+    const accessJti = randomUUID();
 
     const [access_token, refresh_token] = await Promise.all([
       this._jwtService.sign(
-        { sub: userId, email },
+        { sub: userId, email, jti: accessJti },
         { secret: envConfig().JWT.SECRET, expiresIn: envConfig().JWT.EXPIRATION },
       ),
       this._jwtService.sign(
@@ -99,8 +102,18 @@ export class AuthService {
     return { user, ...tokens };
   }
 
-  async logout(userId: string, jti: string) {
+  async logout(userId: string, jti: string, accessToken?: string) {
     await this._prisma.refreshToken.deleteMany({ where: { id: jti, userId } });
+
+    if (accessToken) {
+      const decoded = this._jwtService.decode(accessToken) as { jti?: string; exp?: number } | null;
+      if (decoded?.jti && decoded?.exp) {
+        const ttlMs = Math.max(0, decoded.exp * 1000 - Date.now());
+        if (ttlMs > 0) {
+          await this._redis.set(`blacklist:access:${decoded.jti}`, '1', ttlMs);
+        }
+      }
+    }
   }
 
   async getProfile(userId: string) {
