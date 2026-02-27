@@ -6,6 +6,8 @@
   cursor: pointer;
   transition: transform 0.15s, box-shadow 0.15s;
   border: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
 }
 
 .card:hover {
@@ -48,6 +50,13 @@
   overflow: hidden;
 }
 
+.descriptionEmpty {
+  font-size: 0.875rem;
+  color: #d1d5db;
+  margin: 0.5rem 0;
+  line-height: 1.4;
+}
+
 .dueDate {
   font-size: 0.8rem;
   color: #9ca3af;
@@ -58,7 +67,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.75rem;
+  margin-top: auto;
   padding-top: 0.75rem;
   border-top: 1px solid #f3f4f6;
 }

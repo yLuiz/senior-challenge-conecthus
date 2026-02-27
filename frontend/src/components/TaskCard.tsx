@@ -34,15 +34,15 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange }: TaskCardPr
         </span>
       </div>
 
-      {task.description && (
-        <p className={styles.description}>{task.description}</p>
-      )}
+       <p className={styles.dueDate}>
+        {task.dueDate
+          ? `Vence: ${task.dueDate.split('T')[0].split('-').reverse().join('/')}`
+          : 'Vence: -'}
+      </p>
 
-      {task.dueDate && (
-        <p className={styles.dueDate}>
-          Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
-        </p>
-      )}
+      <p className={task.description ? styles.description : styles.descriptionEmpty}>
+        {task.description ?? <em>Sem descrição</em>}
+      </p>     
 
       <div className={styles.actions} onClick={(e) => e.stopPropagation()}>
         <select
