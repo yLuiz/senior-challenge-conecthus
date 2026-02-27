@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -41,7 +40,7 @@ export function LoginScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <View style={styles.card}>
         <Text style={styles.logo}>Task Manager</Text>

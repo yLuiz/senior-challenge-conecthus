@@ -15,10 +15,17 @@ export function RegisterPage() {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  const passwordCriteria = [
+    { label: 'Mínimo 8 caracteres', met: password.length >= 8 },
+    { label: 'Uma letra maiúscula (A–Z)', met: /[A-Z]/.test(password) },
+    { label: 'Um número (0–9)', met: /\d/.test(password) },
+    { label: 'Um caractere especial (!@#$...)', met: /[\W_]/.test(password) },
+  ];
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (password.length < 6) {
-      setError('A senha deve ter no minimo 6 caracteres');
+    if (passwordCriteria.some((c) => !c.met)) {
+      setError('A senha não atende a todos os critérios de segurança');
       return;
     }
 
@@ -80,7 +87,7 @@ export function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`${styles.input} ${styles.passwordInput}`}
-                placeholder="Minimo 6 caracteres"
+                placeholder="Mínimo 8 caracteres"
                 required
               />
               <button
@@ -91,6 +98,15 @@ export function RegisterPage() {
                 {showPassword ? 'Ocultar' : 'Mostrar'}
               </button>
             </div>
+            {password.length > 0 && (
+              <ul className={styles.criteria}>
+                {passwordCriteria.map(({ label, met }) => (
+                  <li key={label} className={met ? styles.criterionMet : styles.criterionUnmet}>
+                    {met ? '✓' : '○'} {label}
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           <button type="submit" className={styles.btn} disabled={isLoading}>

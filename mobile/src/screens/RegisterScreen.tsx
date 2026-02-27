@@ -7,7 +7,6 @@ import {
   StyleSheet,
   Alert,
   KeyboardAvoidingView,
-  Platform,
   ActivityIndicator,
   ScrollView,
 } from 'react-native';
@@ -16,6 +15,13 @@ import { useAuth } from '../context/AuthContext';
 import { RootStackParamList } from '../types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Register'>;
+
+const PASSWORD_CRITERIA = [
+  { label: 'Mínimo 8 caracteres', test: (p: string) => p.length >= 8 },
+  { label: 'Uma letra maiúscula (A–Z)', test: (p: string) => /[A-Z]/.test(p) },
+  { label: 'Um número (0–9)', test: (p: string) => /\d/.test(p) },
+  { label: 'Um caractere especial (!@#$...)', test: (p: string) => /[\W_]/.test(p) },
+];
 
 export function RegisterScreen({ navigation }: Props) {
   const [name, setName] = useState('');
@@ -30,8 +36,8 @@ export function RegisterScreen({ navigation }: Props) {
       Alert.alert('Erro', 'Preencha todos os campos');
       return;
     }
-    if (password.length < 6) {
-      Alert.alert('Erro', 'A senha deve ter no mínimo 6 caracteres');
+    if (PASSWORD_CRITERIA.some((c) => !c.test(password))) {
+      Alert.alert('Senha fraca', 'A senha não atende a todos os critérios de segurança');
       return;
     }
     setIsLoading(true);
@@ -49,7 +55,7 @@ export function RegisterScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior="padding"
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
@@ -79,7 +85,7 @@ export function RegisterScreen({ navigation }: Props) {
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.inputWithToggle}
-              placeholder="Senha (mín. 6 caracteres)"
+              placeholder="Mínimo 8 caracteres"
               placeholderTextColor="#9ca3af"
               value={password}
               onChangeText={setPassword}
@@ -89,6 +95,19 @@ export function RegisterScreen({ navigation }: Props) {
               <Text style={styles.eyeText}>{showPassword ? 'Ocultar' : 'Ver'}</Text>
             </TouchableOpacity>
           </View>
+
+          {password.length > 0 && (
+            <View style={styles.criteria}>
+              {PASSWORD_CRITERIA.map(({ label, test }) => {
+                const met = test(password);
+                return (
+                  <Text key={label} style={met ? styles.criterionMet : styles.criterionUnmet}>
+                    {met ? '✓' : '○'} {label}
+                  </Text>
+                );
+              })}
+            </View>
+          )}
 
           <TouchableOpacity
             style={[styles.btn, isLoading && styles.btnDisabled]}
@@ -195,6 +214,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#6366f1',
     fontWeight: '600',
+  },
+  criteria: {
+    marginTop: -6,
+    marginBottom: 14,
+    gap: 4,
+  },
+  criterionMet: {
+    fontSize: 12,
+    color: '#059669',
+  },
+  criterionUnmet: {
+    fontSize: 12,
+    color: '#9ca3af',
   },
   link: {
     textAlign: 'center',
