@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Task, TaskStatus, RootStackParamList } from '../types';
@@ -36,6 +37,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 
 export function TasksScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
+  const insets = useSafeAreaInsets();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -232,13 +234,17 @@ export function TasksScreen({ navigation }: Props) {
               <ActivityIndicator style={styles.loadingMore} color="#6366f1" />
             ) : null
           }
-          contentContainerStyle={tasks.length === 0 ? { flex: 1 } : undefined}
+          contentContainerStyle={
+            tasks.length === 0
+              ? { flex: 1, paddingBottom: insets.bottom }
+              : { paddingBottom: insets.bottom + 88 }
+          }
         />
       )}
 
       {/* Implement CreateTaskScreen */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: insets.bottom + 16 }]}
         onPress={() => navigation.navigate('CreateTask', {})}
       >
         <Text style={styles.fabText}>+</Text>
@@ -316,7 +322,6 @@ const styles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
-    bottom: 60,
     width: 56,
     height: 56,
     borderRadius: 28,

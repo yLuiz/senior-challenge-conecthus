@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, Task, TaskStatus } from '../types';
@@ -34,6 +35,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 export function TaskDetailScreen({ navigation, route }: Props) {
   const { taskId } = route.params;
   const { user } = useAuth();
+  const insets = useSafeAreaInsets();
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -104,7 +106,7 @@ export function TaskDetailScreen({ navigation, route }: Props) {
   if (!task) return null;
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <View style={styles.card}>
         <View style={styles.header}>
           <Text style={styles.title}>{task.title}</Text>
