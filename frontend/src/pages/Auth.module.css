@@ -172,3 +172,14 @@
 .link:hover {
   text-decoration: underline;
 }
+
+@media (max-width: 480px) {
+  .card {
+    padding: 1.5rem 1.25rem;
+  }
+
+  .logoCircle {
+    width: 64px;
+    height: 64px;
+  }
+}

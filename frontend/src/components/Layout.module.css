@@ -37,6 +37,10 @@
 .username {
   font-size: 0.9rem;
   opacity: 0.8;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 160px;
 }
 
 .logoutBtn {

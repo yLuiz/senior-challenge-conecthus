@@ -63,6 +63,21 @@
   min-width: 140px;
 }
 
+@media (max-width: 390px) {
+  .filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filterSelect,
+  .filterInput,
+  .dateFilter,
+  .clearBtn {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
 .filterSelect:focus,
 .filterInput:focus {
   border-color: #6366f1;

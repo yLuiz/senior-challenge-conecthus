@@ -146,12 +146,15 @@ const styles = StyleSheet.create({
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 24,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 20,
     padding: 28,
+    width: '100%',
+    maxWidth: 480,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.3,
