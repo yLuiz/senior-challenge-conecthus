@@ -5,7 +5,7 @@ export interface TaskFilters {
   status?: string;
   search?: string;
   dueDateFrom?: string;
-  dueDateTo?: string;
+  dueDate?: string;
   page?: number;
   limit?: number;
 }

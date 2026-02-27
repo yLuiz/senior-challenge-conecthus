@@ -9,7 +9,9 @@ import {
   RefreshControl,
   TextInput,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
@@ -36,6 +38,37 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
   DONE: '#059669',
 };
 
+// DD/MM/YYYY → YYYY-MM-DD (retorna '' se incompleto)
+const displayToISO = (display: string): string => {
+  const parts = display.split('/');
+  if (parts.length !== 3 || parts[2].length < 4) return '';
+  const [dd, mm, yyyy] = parts;
+  return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+};
+
+const getPickerDate = (display: string): Date => {
+  const iso = displayToISO(display);
+  if (iso) {
+    const [yyyy, mm, dd] = iso.split('-').map(Number);
+    return new Date(yyyy, mm - 1, dd);
+  }
+  return new Date();
+};
+
+const formatPickerDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${day}/${month}/${year}`;
+};
+
+const applyDateMask = (text: string): string => {
+  const digits = text.replace(/\D/g, '').slice(0, 8);
+  if (digits.length > 4) return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  if (digits.length > 2) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return digits;
+};
+
 export function TasksScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
   const insets = useSafeAreaInsets();
@@ -46,6 +79,9 @@ export function TasksScreen({ navigation }: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
+  const [dueDateFromDisplay, setDueDateFromDisplay] = useState('');
+  const [dueDateToDisplay, setDueDateToDisplay] = useState('');
+  const [activePicker, setActivePicker] = useState<'from' | 'to' | null>(null);
 
   const pageRef = useRef(1);
   const PAGE_SIZE = 10;
@@ -60,6 +96,8 @@ export function TasksScreen({ navigation }: Props) {
       const result = await tasksApi.list({
         search: search || undefined,
         status: statusFilter || undefined,
+        dueDateFrom: dueDateFromDisplay.length === 10 ? displayToISO(dueDateFromDisplay) : undefined,
+        dueDate: dueDateToDisplay.length === 10 ? displayToISO(dueDateToDisplay) : undefined,
         page: pageNum,
         limit: PAGE_SIZE,
       });
@@ -76,7 +114,7 @@ export function TasksScreen({ navigation }: Props) {
         setIsLoadingMore(false);
       }
     }
-  }, [search, statusFilter]);
+  }, [search, statusFilter, dueDateFromDisplay, dueDateToDisplay]);
 
   useFocusEffect(
     useCallback(() => {
@@ -106,7 +144,16 @@ export function TasksScreen({ navigation }: Props) {
   );
 
   useLayoutEffect(() => {
+    const firstName = user?.name?.split(' ')[0] ?? '';
     navigation.setOptions({
+      headerTitle: () => (
+        <View style={styles.headerTitle}>
+          <Text style={styles.headerTitleText}>Minhas Tarefas</Text>
+          {firstName ? (
+            <Text style={styles.headerSubtitle}>Olá, {firstName}</Text>
+          ) : null}
+        </View>
+      ),
       headerRight: () => (
         <TouchableOpacity
           onPress={() =>
@@ -125,7 +172,16 @@ export function TasksScreen({ navigation }: Props) {
         </TouchableOpacity>
       ),
     });
-  }, [navigation, logout]);
+  }, [navigation, logout, user?.name]);
+
+  const hasActiveFilters = search !== '' || statusFilter !== '' || dueDateFromDisplay !== '' || dueDateToDisplay !== '';
+
+  const clearFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setDueDateFromDisplay('');
+    setDueDateToDisplay('');
+  };
 
   const handleDelete = async (id: string) => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
@@ -210,6 +266,96 @@ export function TasksScreen({ navigation }: Props) {
         ))}
       </View>
 
+      {/* Date Range Filter */}
+      <View style={styles.dateFilters}>
+        {/* A partir de */}
+        <View style={styles.dateFilterItem}>
+          <Text style={styles.dateFilterLabel}>Vence a partir de</Text>
+          <View style={styles.dateFilterRow}>
+            <TextInput
+              style={styles.dateFilterInput}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#9ca3af"
+              value={dueDateFromDisplay}
+              onChangeText={(t) => setDueDateFromDisplay(applyDateMask(t))}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            <TouchableOpacity
+              style={styles.dateFilterIcon}
+              onPress={() => dueDateFromDisplay ? setDueDateFromDisplay('') : setActivePicker('from')}
+            >
+              <MaterialIcons
+                name={dueDateFromDisplay ? 'close' : 'calendar-today'}
+                size={15}
+                color={dueDateFromDisplay ? '#9ca3af' : '#6366f1'}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Até */}
+        <View style={styles.dateFilterItem}>
+          <Text style={styles.dateFilterLabel}>Vence Até</Text>
+          <View style={styles.dateFilterRow}>
+            <TextInput
+              style={styles.dateFilterInput}
+              placeholder="DD/MM/AAAA"
+              placeholderTextColor="#9ca3af"
+              value={dueDateToDisplay}
+              onChangeText={(t) => setDueDateToDisplay(applyDateMask(t))}
+              keyboardType="number-pad"
+              maxLength={10}
+            />
+            <TouchableOpacity
+              style={styles.dateFilterIcon}
+              onPress={() => dueDateToDisplay ? setDueDateToDisplay('') : setActivePicker('to')}
+            >
+              <MaterialIcons
+                name={dueDateToDisplay ? 'close' : 'calendar-today'}
+                size={15}
+                color={dueDateToDisplay ? '#9ca3af' : '#6366f1'}
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Clear Filters */}
+      {hasActiveFilters && (
+        <TouchableOpacity style={styles.clearBtn} onPress={clearFilters}>
+          <MaterialIcons name="filter-list-off" size={14} color="#6366f1" />
+          <Text style={styles.clearBtnText}>Limpar filtros</Text>
+        </TouchableOpacity>
+      )}
+
+      {/* Date Picker */}
+      {activePicker && (
+        <>
+          <DateTimePicker
+            value={getPickerDate(activePicker === 'from' ? dueDateFromDisplay : dueDateToDisplay)}
+            mode="date"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(_event, selectedDate) => {
+              if (Platform.OS === 'android') setActivePicker(null);
+              if (selectedDate) {
+                const formatted = formatPickerDate(selectedDate);
+                if (activePicker === 'from') setDueDateFromDisplay(formatted);
+                else setDueDateToDisplay(formatted);
+              }
+            }}
+          />
+          {Platform.OS === 'ios' && (
+            <TouchableOpacity
+              style={styles.dateConfirmBtn}
+              onPress={() => setActivePicker(null)}
+            >
+              <Text style={styles.dateConfirmBtnText}>Confirmar</Text>
+            </TouchableOpacity>
+          )}
+        </>
+      )}
+
       {isLoading && !refreshing ? (
         <ActivityIndicator style={styles.loader} color="#6366f1" />
       ) : (
@@ -247,14 +393,12 @@ export function TasksScreen({ navigation }: Props) {
         />
       )}
 
-      {/* Implement CreateTaskScreen */}
       <TouchableOpacity
         style={[styles.fab, { bottom: insets.bottom + 16 }]}
         onPress={() => navigation.navigate('CreateTask', {})}
       >
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
-
     </View>
   );
 }
@@ -287,6 +431,46 @@ const styles = StyleSheet.create({
   filterBtnActive: { backgroundColor: '#6366f1' },
   filterText: { fontSize: 12, color: '#374151' },
   filterTextActive: { color: '#fff', fontWeight: '600' },
+  dateFilters: {
+    flexDirection: 'row',
+    paddingHorizontal: 12,
+    gap: 8,
+    marginBottom: 8,
+  },
+  dateFilterItem: { flex: 1 },
+  dateFilterLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#6b7280',
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 4,
+  },
+  dateFilterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    paddingHorizontal: 8,
+  },
+  dateFilterInput: {
+    flex: 1,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#111827',
+  },
+  dateFilterIcon: { padding: 2 },
+  dateConfirmBtn: {
+    backgroundColor: '#6366f1',
+    marginHorizontal: 12,
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  dateConfirmBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
   card: {
     backgroundColor: '#fff',
     margin: 12,
@@ -342,10 +526,23 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   fabText: { color: '#fff', fontSize: 28, fontWeight: '300', lineHeight: 32 },
+  headerTitle: { alignItems: 'flex-start' },
+  headerTitleText: { color: '#fff', fontSize: 17, fontWeight: '700' },
+  headerSubtitle: { color: '#a5b4fc', fontSize: 12, marginTop: 1 },
   logoutButton: { paddingHorizontal: 4 },
   logoutText: { color: '#ef4444', fontSize: 15, fontWeight: '600' },
   loader: { flex: 1, justifyContent: 'center' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#9ca3af', fontSize: 15 },
   loadingMore: { paddingVertical: 16 },
+  clearBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-end',
+    gap: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 4,
+  },
+  clearBtnText: { fontSize: 12, color: '#6366f1', fontWeight: '600' },
 });
