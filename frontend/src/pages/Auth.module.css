@@ -16,6 +16,19 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
 }
 
+.logoCircle {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 1.25rem;
+  background: #f8f9fb;
+  border: 3px solid #e5e7eb;
+  padding: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .title {
   text-align: center;
   font-size: 1.5rem;

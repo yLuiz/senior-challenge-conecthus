@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   ActivityIndicator,
   ScrollView,
+  Image,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useAuth } from '../context/AuthContext';
@@ -59,7 +60,12 @@ export function RegisterScreen({ navigation }: Props) {
     >
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <View style={styles.card}>
-          <Text style={styles.logo}>Task Manager</Text>
+          <Image
+            source={require('../../assets/conecthus_logo.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Task Manager</Text>
           <Text style={styles.subtitle}>Criar nova conta</Text>
 
           <TextInput
@@ -152,8 +158,19 @@ const styles = StyleSheet.create({
     shadowRadius: 16,
     elevation: 10,
   },
-  logo: {
-    fontSize: 24,
+  logoImg: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    alignSelf: 'center',
+    marginBottom: 10,
+    backgroundColor: '#f8f9fb',
+    borderWidth: 3,
+    borderColor: '#e5e7eb',
+    padding: 8,
+  },
+  title: {
+    fontSize: 22,
     fontWeight: '800',
     color: '#1a1a2e',
     textAlign: 'center',

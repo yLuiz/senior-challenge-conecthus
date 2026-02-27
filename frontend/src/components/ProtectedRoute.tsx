@@ -1,6 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import logo from '../assets/conecthus_logo.svg';
+import logo from '../assets/conecthus_logo.png';
 import styles from './ProtectedRoute.module.css';
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
