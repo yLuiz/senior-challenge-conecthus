@@ -8,6 +8,8 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, Task, TaskStatus } from '../types';
@@ -35,6 +37,14 @@ export function TaskDetailScreen({ navigation, route }: Props) {
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const goBack = () => {
+    if (navigation.canGoBack()) {
+      navigation.goBack();
+    } else {
+      navigation.navigate('Tasks');
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       setIsLoading(true);
@@ -43,7 +53,7 @@ export function TaskDetailScreen({ navigation, route }: Props) {
         .then(setTask)
         .catch(() => {
           Alert.alert('Erro', 'Tarefa não encontrada');
-          navigation.goBack();
+          goBack();
         })
         .finally(() => setIsLoading(false));
     }, [taskId, navigation]),
@@ -55,16 +65,17 @@ export function TaskDetailScreen({ navigation, route }: Props) {
       const unsubscribe = mqttService.onNotification(user.id, ({ event, taskId: notifTaskId }) => {
         if (notifTaskId !== taskId) return;
         if (event === 'TASK_DELETED') {
-          navigation.goBack();
+          goBack();
         } else if (event === 'TASK_UPDATED') {
-          tasksApi.get(taskId).then(setTask).catch(() => navigation.goBack());
+          tasksApi.get(taskId).then(setTask).catch(goBack);
         }
       });
       return unsubscribe;
     }, [user?.id, taskId, navigation]),
   );
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert('Excluir Tarefa', 'Tem certeza que deseja excluir esta tarefa?', [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -73,9 +84,9 @@ export function TaskDetailScreen({ navigation, route }: Props) {
         onPress: async () => {
           try {
             await tasksApi.remove(taskId);
-            navigation.goBack();
+            goBack();
           } catch {
-            Alert.alert('Erro', 'Falha ao excluir tarefa');
+            Toast.show({ type: 'error', text1: 'Falha ao excluir tarefa' });
           }
         },
       },

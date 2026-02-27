@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import './index.css';
 import { LoginPage } from './pages/Login';
@@ -34,6 +35,7 @@ export default function App() {
         </Routes>
 
       </AuthProvider>
+      <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
     </BrowserRouter>
   );
 }

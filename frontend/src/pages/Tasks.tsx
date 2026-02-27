@@ -1,6 +1,7 @@
 import { useTasks } from '@/hooks/useTasks';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Layout } from '../components/Layout';
 import { TaskCard } from '../components/TaskCard';
 import { TaskForm } from '../components/TaskForm';
@@ -27,6 +28,9 @@ export function TasksPage() {
     try {
       await createTask(data);
       setShowForm(false);
+      toast.success('Tarefa criada com sucesso!');
+    } catch {
+      toast.error('Erro ao criar tarefa');
     } finally {
       setIsSaving(false);
     }
@@ -38,7 +42,12 @@ export function TasksPage() {
 
   const handleDelete = async (id: string) => {
     if (confirm('Deseja excluir esta tarefa?')) {
-      await removeTask(id);
+      try {
+        await removeTask(id);
+        toast.success('Tarefa excluída!');
+      } catch {
+        toast.error('Erro ao excluir tarefa');
+      }
     }
   };
 

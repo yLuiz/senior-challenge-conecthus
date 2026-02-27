@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Layout } from '../components/Layout';
 import { TaskForm } from '../components/TaskForm';
 import { tasksApi } from '../api/tasks';
@@ -36,6 +37,9 @@ export function TaskDetailPage() {
       const updated = await tasksApi.update(task.id, data);
       setTask(updated);
       setIsEditing(false);
+      toast.success('Tarefa atualizada!');
+    } catch {
+      toast.error('Erro ao atualizar tarefa');
     } finally {
       setIsSaving(false);
     }
@@ -43,8 +47,13 @@ export function TaskDetailPage() {
 
   const handleDelete = async () => {
     if (!task || !confirm('Deseja excluir esta tarefa?')) return;
-    await tasksApi.remove(task.id);
-    navigate('/');
+    try {
+      await tasksApi.remove(task.id);
+      toast.success('Tarefa excluída!');
+      navigate('/');
+    } catch {
+      toast.error('Erro ao excluir tarefa');
+    }
   };
 
   if (isLoading) {

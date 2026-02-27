@@ -10,6 +10,8 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import Toast from 'react-native-toast-message';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Task, TaskStatus, RootStackParamList } from '../types';
@@ -49,7 +51,7 @@ export function TasksScreen({ navigation }: Props) {
       });
       setTasks(data);
     } catch {
-      Alert.alert('Erro', 'Falha ao carregar tarefas');
+      Toast.show({ type: 'error', text1: 'Falha ao carregar tarefas' });
     } finally {
       setIsLoading(false);
       setRefreshing(false);
@@ -100,6 +102,7 @@ export function TasksScreen({ navigation }: Props) {
   }, [navigation, logout]);
 
   const handleDelete = async (id: string) => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     Alert.alert('Excluir Tarefa', 'Tem certeza?', [
       { text: 'Cancelar', style: 'cancel' },
       {
@@ -109,8 +112,9 @@ export function TasksScreen({ navigation }: Props) {
           try {
             await tasksApi.remove(id);
             setTasks((prev) => prev.filter((t) => t.id !== id));
+            Toast.show({ type: 'success', text1: 'Tarefa excluída!' });
           } catch {
-            Alert.alert('Erro', 'Falha ao excluir tarefa');
+            Toast.show({ type: 'error', text1: 'Falha ao excluir tarefa' });
           }
         },
       },
