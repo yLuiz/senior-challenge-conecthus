@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RootStackParamList, TaskStatus } from '../types';
 import { tasksApi } from '../api/tasks';
 
@@ -24,6 +25,7 @@ const STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
 export function CreateTaskScreen({ navigation, route }: Props) {
   const taskId = route.params?.taskId;
   const isEditing = !!taskId;
+  const insets = useSafeAreaInsets();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -86,7 +88,7 @@ export function CreateTaskScreen({ navigation, route }: Props) {
   }
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 16 }}>
       <View style={styles.form}>
         <Text style={styles.label}>Título *</Text>
         <TextInput

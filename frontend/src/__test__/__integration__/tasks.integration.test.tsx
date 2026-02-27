@@ -112,7 +112,10 @@ beforeEach(() => {
   });
 
   mockedAuthApi.getMe.mockResolvedValue(mockUser);
-  mockedTasksApi.list.mockResolvedValue([...mockTasks]);
+  mockedTasksApi.list.mockResolvedValue({
+    data: [...mockTasks],
+    meta: { total: mockTasks.length, page: 1, limit: 10, totalPages: 1 },
+  });
 
   mockedTasksApi.create.mockImplementation(async (data: Partial<Task>) => ({
     id: 'task-new',
@@ -154,7 +157,7 @@ describe('Página de Tarefas (integração)', () => {
     });
 
     it('exibe a mensagem de estado vazio quando a API retorna lista vazia', async () => {
-      mockedTasksApi.list.mockResolvedValue([]);
+      mockedTasksApi.list.mockResolvedValue({ data: [], meta: { total: 0, page: 1, limit: 10, totalPages: 0 } });
 
       renderTasksPage();
 
@@ -378,7 +381,10 @@ describe('Página de Tarefas (integração)', () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      mockedTasksApi.list.mockResolvedValueOnce([...mockTasks, newTask]);
+      mockedTasksApi.list.mockResolvedValueOnce({
+        data: [...mockTasks, newTask],
+        meta: { total: mockTasks.length + 1, page: 1, limit: 10, totalPages: 1 },
+      });
 
       const callsBefore = mockedTasksApi.list.mock.calls.length;
 

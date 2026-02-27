@@ -1,5 +1,5 @@
 import { useTasks } from '@/hooks/useTasks';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/Layout';
@@ -22,7 +22,19 @@ export function TasksPage() {
     }, 350);
     return () => clearTimeout(timer);
   }, [searchInput]);
-  const { tasks, isLoading, error, createTask, updateTask, removeTask } = useTasks(filters);
+  const { tasks, isLoading, isLoadingMore, hasMore, error, loadMore, createTask, updateTask, removeTask } = useTasks(filters);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting && hasMore && !isLoadingMore) loadMore(); },
+      { threshold: 0.1 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, isLoadingMore, loadMore]);
 
   const handleCreate = async (data: Partial<Task>) => {
     setIsSaving(true);
@@ -158,6 +170,16 @@ export function TasksPage() {
               />
             ))}
       </div>
+
+      {/* Infinite scroll sentinel */}
+      <div ref={sentinelRef} className={styles.sentinel} />
+
+      {isLoadingMore && (
+        <div className={styles.loadingMore}>
+          <span className={styles.spinner} />
+          <span>Carregando mais tarefas...</span>
+        </div>
+      )}
     </Layout>
   );
 }
