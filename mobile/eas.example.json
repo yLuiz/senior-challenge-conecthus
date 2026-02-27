@@ -7,13 +7,15 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://senior-challenge-conecthus-production.up.railway.app/api"
+        "EXPO_PUBLIC_API_URL": "https://your_api_url/api",
+        "EXPO_PUBLIC_MQTT_URL": "wss://your_mqtt_url"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://senior-challenge-conecthus-production.up.railway.app/api"
+        "EXPO_PUBLIC_API_URL": "https://your_api_url/api",
+        "EXPO_PUBLIC_MQTT_URL": "wss://your_mqtt_url"
       },
       "android": {
         "buildType": "apk"
@@ -21,7 +23,8 @@
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "https://senior-challenge-conecthus-production.up.railway.app/api"
+        "EXPO_PUBLIC_API_URL": "https://your_api_url/api",
+        "EXPO_PUBLIC_MQTT_URL": "wss://your_mqtt_url"
       },
       "android": {
         "buildType": "app-bundle"
