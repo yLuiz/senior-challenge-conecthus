@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -107,9 +108,14 @@ export function RegisterScreen({ navigation }: Props) {
               {PASSWORD_CRITERIA.map(({ label, test }) => {
                 const met = test(password);
                 return (
-                  <Text key={label} style={met ? styles.criterionMet : styles.criterionUnmet}>
-                    {met ? '✓' : '○'} {label}
-                  </Text>
+                  <View key={label} style={styles.criterionRow}>
+                    <MaterialIcons
+                      name={met ? 'check-circle' : 'radio-button-unchecked'}
+                      size={12}
+                      color={met ? '#059669' : '#9ca3af'}
+                    />
+                    <Text style={met ? styles.criterionMet : styles.criterionUnmet}>{label}</Text>
+                  </View>
                 );
               })}
             </View>
@@ -239,6 +245,11 @@ const styles = StyleSheet.create({
     marginTop: -6,
     marginBottom: 14,
     gap: 4,
+  },
+  criterionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   criterionMet: {
     fontSize: 12,

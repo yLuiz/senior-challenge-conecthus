@@ -1,3 +1,7 @@
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditIcon from '@mui/icons-material/Edit';
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -96,24 +100,27 @@ export function TaskDetailPage() {
 
             <div className={styles.meta}>
               {task.dueDate && (
-                <span>
-                  📅 Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
+                <span className={styles.metaItem}>
+                  <CalendarTodayIcon sx={{ fontSize: 14 }} />
+                  Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
                 </span>
               )}
-              <span>
-                🕒 Criada: {new Date(task.createdAt).toLocaleDateString('pt-BR')}
+              <span className={styles.metaItem}>
+                <AccessTimeIcon sx={{ fontSize: 14 }} />
+                Criada: {new Date(task.createdAt).toLocaleDateString('pt-BR')}
               </span>
-              <span>
-                ✏️ Atualizada: {new Date(task.updatedAt).toLocaleDateString('pt-BR')}
+              <span className={styles.metaItem}>
+                <EditIcon sx={{ fontSize: 14 }} />
+                Atualizada: {new Date(task.updatedAt).toLocaleDateString('pt-BR')}
               </span>
             </div>
 
             <div className={styles.actions}>
               <button onClick={() => setIsEditing(true)} className={styles.editBtn}>
-                Editar
+                <EditIcon sx={{ fontSize: 16 }} /> Editar
               </button>
               <button onClick={handleDelete} className={styles.deleteBtn}>
-                Excluir
+                <DeleteOutlineIcon sx={{ fontSize: 16 }} /> Excluir
               </button>
             </div>
           </>

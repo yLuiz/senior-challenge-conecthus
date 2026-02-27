@@ -1,6 +1,13 @@
 import '@testing-library/jest-dom';
 import { beforeAll, afterAll, vi } from 'vitest';
 
+// jsdom não implementa IntersectionObserver — fornece um stub mínimo para testes
+global.IntersectionObserver = class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+} as unknown as typeof IntersectionObserver;
+
 beforeAll(() => {
   // Captura as referências originais antes de mockar os console para evitar recursão infinita
   const _warn = console.warn.bind(console);

@@ -136,12 +136,18 @@
 }
 
 .criterionMet {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.8rem;
   color: #059669;
   transition: color 0.2s;
 }
 
 .criterionUnmet {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
   font-size: 0.8rem;
   color: #9ca3af;
   transition: color 0.2s;
