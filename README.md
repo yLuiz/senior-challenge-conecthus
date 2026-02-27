@@ -89,6 +89,14 @@ Edite `docker/.env` e substitua `JWT_SECRET` e `JWT_REFRESH_SECRET` por strings 
 >
 > ℹ️ Requisições sem cabeçalho `Origin` (como as feitas por Postman, curl ou pelo app mobile) **nunca são bloqueadas por CORS** e independem dessa variável.
 
+> 🔌 **`FRONTEND_PORT`: porta do frontend exposta no host**
+>
+> Por padrão, o Nginx é acessível na **porta `80`** do host (`http://localhost`). Se essa porta já estiver em uso, defina `FRONTEND_PORT` no `docker/.env` com outra porta antes de subir:
+> ```
+> FRONTEND_PORT=8080
+> ```
+> O frontend passará a ser acessível em `http://localhost:8080`. O Nginx dentro do container continua ouvindo na porta `80` internamente — apenas o mapeamento externo muda.
+
 <br><br>
 ---
 ### Atenção
@@ -349,5 +357,6 @@ Documentação interativa completa: **`http://localhost:3000/api/docs`** (Swagge
 | `localhost` não funciona no mobile | Use o IP da máquina host (ex: `192.168.x.x`) ou `10.0.2.2` no emulador Android |
 | Erro de conexão MQTT | Revise `VITE_MQTT_URL` / `EXPO_PUBLIC_MQTT_URL`; confirme que a porta `9001` está exposta |
 | Erro de banco no backend | Valide `DATABASE_URL` e rode `npx prisma migrate deploy` |
-| Porta ocupada (`80`, `3000`, `5432`, `6379`, `1883`, `9001`) | Finalize o processo ou contêiner conflitante antes de subir |
+| Porta ocupada (`3000`, `5432`, `6379`, `1883`, `9001`) | Finalize o processo ou contêiner conflitante antes de subir |
+| Porta `80` ocupada (frontend) | Defina `FRONTEND_PORT=<outra porta>` no `docker/.env` (ex: `8080`) e acesse em `http://localhost:8080` |
 | `prisma generate` falha no build Docker | Verifique se `DATABASE_URL` está definido como `ARG` no `Dockerfile` do backend |
