@@ -106,15 +106,17 @@ api.interceptors.response.use(
         headers: { Authorization: `Bearer ${refreshToken}` },
       });
 
+      const authData = data.data;
+
       await Promise.all([
-        AsyncStorage.setItem('token', data.access_token),
-        AsyncStorage.setItem('refreshToken', data.refresh_token),
-        AsyncStorage.setItem('user', JSON.stringify(data.user)),
+        AsyncStorage.setItem('token', authData.access_token),
+        AsyncStorage.setItem('refreshToken', authData.refresh_token),
+        AsyncStorage.setItem('user', JSON.stringify(authData.user)),
       ]);
 
-      originalRequest.headers.set('Authorization', `Bearer ${data.access_token}`);
-      onTokenRefreshedCb?.(data.access_token);
-      processQueue(null, data.access_token);
+      originalRequest.headers.set('Authorization', `Bearer ${authData.access_token}`);
+      onTokenRefreshedCb?.(authData.access_token);
+      processQueue(null, authData.access_token);
       return api(originalRequest);
     } catch (refreshError) {
       await clearAuthStorage();

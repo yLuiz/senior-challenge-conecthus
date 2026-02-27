@@ -5,6 +5,8 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
 import { validateEnv } from './config/env.validation';
+import { GlobalExceptionFilter } from './infra/http/filters/http-exception.filter';
+import { ResponseInterceptor } from './infra/http/interceptors/response.interceptor';
 
 async function bootstrap() {
   validateEnv(process.env as Record<string, unknown>);
@@ -42,7 +44,15 @@ async function bootstrap() {
     }),
   );
 
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
+  app.useGlobalFilters(new GlobalExceptionFilter());
+
+  // ResponseInterceptor wraps single-item responses in { data: ... }
+  // ClassSerializerInterceptor (inner) runs first: converts class instances and applies @Exclude()
+  // ResponseInterceptor (outer) runs second: wraps the already-plain result
+  app.useGlobalInterceptors(
+    new ResponseInterceptor(),
+    new ClassSerializerInterceptor(app.get(Reflector)),
+  );
 
   app.setGlobalPrefix('api');
 

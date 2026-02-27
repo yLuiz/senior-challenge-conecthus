@@ -34,15 +34,15 @@ const refreshAccessToken = async () => {
     throw new Error('Missing refresh token');
   }
 
-  const response = await api.post<AuthResponse>(
+  const response = await api.post<{ data: AuthResponse }>(
     'v1/auth/refresh',
     undefined,
     { headers: { Authorization: `Bearer ${refreshToken}` } },
   );
 
-  localStorage.setItem('token', response.data.access_token);
-  localStorage.setItem('refresh_token', response.data.refresh_token);
-  return response.data.access_token;
+  localStorage.setItem('token', response.data.data.access_token);
+  localStorage.setItem('refresh_token', response.data.data.refresh_token);
+  return response.data.data.access_token;
 };
 
 api.interceptors.response.use(

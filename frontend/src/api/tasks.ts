@@ -1,5 +1,5 @@
 import api from './axios';
-import { Task, TaskFilters } from '../types';
+import { ApiResponse, Task, TaskFilters } from '../types';
 
 interface PaginatedTasksResponse {
   data: Task[];
@@ -25,13 +25,13 @@ export const tasksApi = {
       })
       .then((r) => r.data.data),
 
-  get: (id: string) => api.get<Task>(`v1/tasks/${id}`).then((r) => r.data),
+  get: (id: string) => api.get<ApiResponse<Task>>(`v1/tasks/${id}`).then((r) => r.data.data),
 
   create: (data: Partial<Task>) =>
-    api.post<Task>('v1/tasks', data).then((r) => r.data),
+    api.post<ApiResponse<Task>>('v1/tasks', data).then((r) => r.data.data),
 
   update: (id: string, data: Partial<Task>) =>
-    api.patch<Task>(`v1/tasks/${id}`, data).then((r) => r.data),
+    api.patch<ApiResponse<Task>>(`v1/tasks/${id}`, data).then((r) => r.data.data),
 
   remove: (id: string) => api.delete(`v1/tasks/${id}`).then((r) => r.data),
 };

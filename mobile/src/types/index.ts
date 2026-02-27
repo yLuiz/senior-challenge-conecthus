@@ -31,3 +31,7 @@ export type RootStackParamList = {
   CreateTask: { taskId?: string };
   TaskDetail: { taskId: string };
 };
+
+export interface ApiResponse<T> {
+  data: T;
+}
