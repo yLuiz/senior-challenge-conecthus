@@ -231,13 +231,17 @@ describe('Página de Tarefas (integração)', () => {
 
   describe('Exclusão de tarefas', () => {
     it('chama tasksApi.remove e remove a tarefa da lista após confirmação', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(true);
-
       renderTasksPage();
       await waitForTasksLoaded();
 
       const deleteButtons = screen.getAllByTitle('Excluir tarefa');
       fireEvent.click(deleteButtons[0]);
+
+      // Aguarda o modal de confirmação aparecer e confirma a exclusão
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText('Excluir'));
 
       await waitFor(() => {
         expect(mockedTasksApi.remove).toHaveBeenCalledWith('task1');
@@ -249,13 +253,17 @@ describe('Página de Tarefas (integração)', () => {
     });
 
     it('não remove a tarefa quando o usuário cancela a confirmação', async () => {
-      vi.spyOn(window, 'confirm').mockReturnValue(false);
-
       renderTasksPage();
       await waitForTasksLoaded();
 
       const deleteButtons = screen.getAllByTitle('Excluir tarefa');
       fireEvent.click(deleteButtons[0]);
+
+      // Aguarda o modal de confirmação aparecer e cancela
+      await waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+      fireEvent.click(screen.getByText('Cancelar'));
 
       expect(mockedTasksApi.remove).not.toHaveBeenCalled();
       expect(screen.getByText('Tarefa 1')).toBeInTheDocument();
