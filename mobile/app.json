@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/conecthus_logo.png",
         "backgroundColor": "#1a1a2e"
       },
       "package": "com.taskmanager.app"
@@ -35,6 +35,12 @@
       ],
       "expo-asset",
       "@react-native-community/datetimepicker"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "cbaabdc1-e66b-4c36-9974-f28472147ab1"
+      }
+    },
+    "owner": "yluizv"
   }
 }

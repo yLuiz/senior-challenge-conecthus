@@ -31,8 +31,13 @@ export function LoginScreen({ navigation }: Props) {
     setIsLoading(true);
     try {
       await login(email.trim().toLowerCase(), password);
-    } catch {
-      Alert.alert('Erro', 'Email ou senha inválidos');
+    } catch (err) {
+      const e = err as { response?: { status?: number } };
+      if (!e.response) {
+        Alert.alert('Erro de Conexão', 'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.');
+      } else {
+        Alert.alert('Erro', 'Email ou senha inválidos');
+      }
     } finally {
       setIsLoading(false);
     }
