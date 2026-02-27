@@ -3,8 +3,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import React from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { CreateTaskScreen } from '../screens/CreateTaskScreen';
 import { LoginScreen } from '../screens/LoginScreen';
 import { RegisterScreen } from '../screens/RegisterScreen';
+import { TaskDetailScreen } from '../screens/TaskDetailScreen';
 import { TasksScreen } from '../screens/TasksScreen';
 import { RootStackParamList } from '../types';
 
@@ -37,6 +39,18 @@ export function AppNavigator() {
               name="Tasks"
               component={TasksScreen}
               options={{ title: 'Minhas Tarefas' }}
+            />
+            <Stack.Screen
+              name="CreateTask"
+              component={CreateTaskScreen}
+              options={({ route }) => ({
+                title: route.params?.taskId ? 'Editar Tarefa' : 'Nova Tarefa',
+              })}
+            />
+            <Stack.Screen
+              name="TaskDetail"
+              component={TaskDetailScreen}
+              options={{ title: 'Detalhes da Tarefa' }}
             />
           </>
         ) : (
