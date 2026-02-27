@@ -15,8 +15,8 @@ export function Layout({ children }: { children: ReactNode }) {
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
-        <Link to="/" className={styles.logo}>
-          Task Manager
+        <Link to="/" className={styles.logoLink}>
+          <span className={styles.logoText}>Task Manager</span>
         </Link>
         <nav className={styles.nav}>
           {user && (

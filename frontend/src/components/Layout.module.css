@@ -16,11 +16,16 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
-.logo {
-  color: #fff;
+.logoLink {
+  display: flex;
+  align-items: center;
   text-decoration: none;
-  font-size: 1.25rem;
+  flex-shrink: 0;
+
+  color: #FFF;
+  text-decoration: none;
   font-weight: 700;
+  font-size: 1.2rem;
 }
 
 .nav {
