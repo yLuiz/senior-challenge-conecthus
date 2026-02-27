@@ -58,6 +58,9 @@
 }
 
 .dueDate {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.8rem;
   color: #9ca3af;
   margin: 0.25rem 0;

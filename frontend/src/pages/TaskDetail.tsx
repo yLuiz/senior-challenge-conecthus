@@ -97,17 +97,16 @@ export function TaskDetailPage() {
               <span className={styles.status}>{STATUS_LABELS[task.status]}</span>
             </div>
 
-            {task.description && (
-              <p className={styles.description}>{task.description}</p>
-            )}
+            {task.description
+              ? <p className={styles.description}>{task.description}</p>
+              : <p className={styles.descriptionEmpty}>Sem descrição</p>
+            }
 
             <div className={styles.meta}>
-              {task.dueDate && (
-                <span className={styles.metaItem}>
-                  <CalendarTodayIcon sx={{ fontSize: 14 }} />
-                  Vence: {task.dueDate.split('T')[0].split('-').reverse().join('/')}
-                </span>
-              )}
+              <span className={styles.metaItem}>
+                <CalendarTodayIcon sx={{ fontSize: 14 }} />
+                Vence: {task.dueDate ? task.dueDate.split('T')[0].split('-').reverse().join('/') : '-'}
+              </span>
               <span className={styles.metaItem}>
                 <AccessTimeIcon sx={{ fontSize: 14 }} />
                 Criada: {new Date(task.createdAt).toLocaleDateString('pt-BR')}

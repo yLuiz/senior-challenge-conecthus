@@ -224,14 +224,16 @@ export function TasksScreen({ navigation }: Props) {
 
       {item.description ? (
         <Text style={styles.cardDesc} numberOfLines={2}>{item.description}</Text>
-      ) : null}
+      ) : (
+        <Text style={styles.cardDescEmpty}>Sem descrição</Text>
+      )}
 
-      {item.dueDate ? (
-        <View style={styles.dueDateRow}>
-          <MaterialIcons name="calendar-today" size={11} color="#9ca3af" />
-          <Text style={styles.dueDate}>{item.dueDate.split('T')[0].split('-').reverse().join('/')}</Text>
-        </View>
-      ) : null}
+      <View style={styles.dueDateRow}>
+        <MaterialIcons name="calendar-today" size={11} color="#9ca3af" />
+        <Text style={styles.dueDate}>
+          {item.dueDate ? item.dueDate.split('T')[0].split('-').reverse().join('/') : '-'}
+        </Text>
+      </View>
 
       <TouchableOpacity
         style={styles.deleteBtn}
@@ -511,6 +513,7 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   cardDesc: { fontSize: 13, color: '#6b7280', lineHeight: 18 },
+  cardDescEmpty: { fontSize: 13, color: '#9ca3af', lineHeight: 18, fontStyle: 'italic' },
   dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
   dueDate: { fontSize: 12, color: '#9ca3af' },
   deleteBtn: { alignSelf: 'flex-end', marginTop: 10 },

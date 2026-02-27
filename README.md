@@ -266,7 +266,16 @@ Senha: Luiz@123
 
 ## Testes
 
+Para rodar os testes, é necessário instalar todas as dependências, configurar os .env corretamente.
+
 ### Backend
+Antes do teste, certifique-se de executar:
+
+```bash
+npm install
+npx prisma generate
+npx prisma migrate deploy
+```
 
 ```bash
 cd backend
