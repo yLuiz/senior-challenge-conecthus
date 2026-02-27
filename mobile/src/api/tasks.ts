@@ -6,11 +6,25 @@ export interface TaskFilters {
   search?: string;
   dueDateFrom?: string;
   dueDateTo?: string;
+  page?: number;
+  limit?: number;
+}
+
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedTasks {
+  data: Task[];
+  meta: PaginationMeta;
 }
 
 export const tasksApi = {
   list: (filters?: TaskFilters) =>
-    api.get<{ data: Task[] }>('v1/tasks', { params: filters }).then((r) => r.data.data),
+    api.get<PaginatedTasks>('v1/tasks', { params: filters }).then((r) => r.data),
 
   get: (id: string) => api.get<ApiResponse<Task>>(`v1/tasks/${id}`).then((r) => r.data.data),
 

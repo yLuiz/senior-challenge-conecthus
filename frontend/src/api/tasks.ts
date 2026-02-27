@@ -1,29 +1,36 @@
 import api from './axios';
 import { ApiResponse, Task, TaskFilters } from '../types';
 
-interface PaginatedTasksResponse {
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
+export interface PaginatedTasks {
   data: Task[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
+  meta: PaginationMeta;
 }
 
 export const tasksApi = {
-  list: (filters?: TaskFilters, signal?: AbortSignal) =>
+  list: (
+    filters?: TaskFilters & { page?: number; limit?: number },
+    signal?: AbortSignal,
+  ) =>
     api
-      .get<PaginatedTasksResponse>('v1/tasks', {
+      .get<PaginatedTasks>('v1/tasks', {
         params: {
           status: filters?.status,
           dueDate: filters?.dueDateTo,
           dueDateFrom: filters?.dueDateFrom,
           search: filters?.search,
+          page: filters?.page ?? 1,
+          limit: filters?.limit ?? 10,
         },
         signal,
       })
-      .then((r) => r.data.data),
+      .then((r) => r.data),
 
   get: (id: string) => api.get<ApiResponse<Task>>(`v1/tasks/${id}`).then((r) => r.data.data),
 

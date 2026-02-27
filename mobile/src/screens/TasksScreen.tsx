@@ -38,42 +38,65 @@ export function TasksScreen({ navigation }: Props) {
   const { user, logout } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<TaskStatus | ''>('');
 
-  const fetchTasks = useCallback(async () => {
-    setIsLoading(true);
+  const pageRef = useRef(1);
+  const PAGE_SIZE = 10;
+
+  const fetchPage = useCallback(async (pageNum: number, mode: 'replace' | 'append') => {
+    if (mode === 'replace') {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     try {
-      const data = await tasksApi.list({
+      const result = await tasksApi.list({
         search: search || undefined,
         status: statusFilter || undefined,
+        page: pageNum,
+        limit: PAGE_SIZE,
       });
-      setTasks(data);
+      setTasks((prev) => mode === 'append' ? [...prev, ...result.data] : result.data);
+      pageRef.current = pageNum;
+      setHasMore(pageNum < result.meta.totalPages);
     } catch {
       Toast.show({ type: 'error', text1: 'Falha ao carregar tarefas' });
     } finally {
-      setIsLoading(false);
-      setRefreshing(false);
+      if (mode === 'replace') {
+        setIsLoading(false);
+        setRefreshing(false);
+      } else {
+        setIsLoadingMore(false);
+      }
     }
   }, [search, statusFilter]);
 
   useFocusEffect(
     useCallback(() => {
-      fetchTasks();
-    }, [fetchTasks]),
+      fetchPage(1, 'replace');
+    }, [fetchPage]),
   );
 
-  // Keep a ref so the MQTT callback always calls the latest fetchTasks
-  // (with the current search/statusFilter) without re-subscribing on every filter change
-  const fetchTasksRef = useRef(fetchTasks);
-  useEffect(() => { fetchTasksRef.current = fetchTasks; }, [fetchTasks]);
+  const loadMore = useCallback(() => {
+    if (!isLoading && !isLoadingMore && hasMore) {
+      fetchPage(pageRef.current + 1, 'append');
+    }
+  }, [isLoading, isLoadingMore, hasMore, fetchPage]);
+
+  // Keep a ref so the MQTT callback always calls fetchPage(1, 'replace')
+  // with current filters without re-subscribing on every filter change
+  const fetchPageRef = useRef(fetchPage);
+  useEffect(() => { fetchPageRef.current = fetchPage; }, [fetchPage]);
 
   useFocusEffect(
     useCallback(() => {
       if (!user?.id) return;
       const unsubscribe = mqttService.onNotification(user.id, () => {
-        fetchTasksRef.current();
+        fetchPageRef.current(1, 'replace');
       });
       return unsubscribe;
     }, [user?.id]),
@@ -161,7 +184,7 @@ export function TasksScreen({ navigation }: Props) {
         placeholderTextColor="#9ca3af"
         value={search}
         onChangeText={setSearch}
-        onSubmitEditing={fetchTasks}
+        onSubmitEditing={() => fetchPage(1, 'replace')}
         returnKeyType="search"
       />
 
@@ -192,15 +215,22 @@ export function TasksScreen({ navigation }: Props) {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                fetchTasks();
+                fetchPage(1, 'replace');
               }}
               colors={['#6366f1']}
             />
           }
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.3}
           ListEmptyComponent={
             <View style={styles.empty}>
               <Text style={styles.emptyText}>Nenhuma tarefa encontrada</Text>
             </View>
+          }
+          ListFooterComponent={
+            isLoadingMore ? (
+              <ActivityIndicator style={styles.loadingMore} color="#6366f1" />
+            ) : null
           }
           contentContainerStyle={tasks.length === 0 ? { flex: 1 } : undefined}
         />
@@ -305,4 +335,5 @@ const styles = StyleSheet.create({
   loader: { flex: 1, justifyContent: 'center' },
   empty: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { color: '#9ca3af', fontSize: 15 },
+  loadingMore: { paddingVertical: 16 },
 });
