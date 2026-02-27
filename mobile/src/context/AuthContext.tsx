@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { User } from '../types';
 import { authApi } from '../api/auth';
 import { registerAuthCallbacks } from '../api/axios';
+import { mqttService } from '../../mqtt/mqttService';
+
+const MQTT_URL = process.env.EXPO_PUBLIC_MQTT_URL || 'ws://localhost:9001';
 
 interface AuthContextData {
   user: User | null;
@@ -24,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     registerAuthCallbacks({
       onSessionExpired: () => {
+        mqttService.disconnect();
         setToken(null);
         setUser(null);
       },
@@ -41,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setToken(storedToken);
           const me = await authApi.getMe();
           setUser(me);
+          mqttService.connect(MQTT_URL, me.id);
           // onTokenRefreshed callback handles token sync if the interceptor silently refreshed
         }
       } catch {
@@ -63,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(data.access_token);
     setUser(data.user);
+    mqttService.connect(MQTT_URL, data.user.id);
   };
 
   const register = async (name: string, email: string, password: string) => {
@@ -76,9 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setToken(data.access_token);
     setUser(data.user);
+    mqttService.connect(MQTT_URL, data.user.id);
   };
 
   const logout = async () => {
+    mqttService.disconnect();
     try {
       const refreshToken = await AsyncStorage.getItem('refreshToken');
       if (refreshToken) await authApi.logout(refreshToken);

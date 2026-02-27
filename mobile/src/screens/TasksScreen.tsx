@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useCallback, useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { Task, TaskStatus, RootStackParamList } from '../types';
 
 import { useAuth } from '../context/AuthContext';
 import { tasksApi } from '@/api/tasks';
+import { mqttService } from '../../mqtt/mqttService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Tasks'>;
 
@@ -59,6 +60,21 @@ export function TasksScreen({ navigation }: Props) {
     useCallback(() => {
       fetchTasks();
     }, [fetchTasks]),
+  );
+
+  // Keep a ref so the MQTT callback always calls the latest fetchTasks
+  // (with the current search/statusFilter) without re-subscribing on every filter change
+  const fetchTasksRef = useRef(fetchTasks);
+  useEffect(() => { fetchTasksRef.current = fetchTasks; }, [fetchTasks]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      const unsubscribe = mqttService.onNotification(user.id, () => {
+        fetchTasksRef.current();
+      });
+      return unsubscribe;
+    }, [user?.id]),
   );
 
   useLayoutEffect(() => {

@@ -12,6 +12,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, Task, TaskStatus } from '../types';
 import { tasksApi } from '../api/tasks';
+import { useAuth } from '../context/AuthContext';
+import { mqttService } from '../../mqtt/mqttService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'>;
 
@@ -29,6 +31,7 @@ const STATUS_COLORS: Record<TaskStatus, string> = {
 
 export function TaskDetailScreen({ navigation, route }: Props) {
   const { taskId } = route.params;
+  const { user } = useAuth();
   const [task, setTask] = useState<Task | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,6 +47,21 @@ export function TaskDetailScreen({ navigation, route }: Props) {
         })
         .finally(() => setIsLoading(false));
     }, [taskId, navigation]),
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!user?.id) return;
+      const unsubscribe = mqttService.onNotification(user.id, ({ event, taskId: notifTaskId }) => {
+        if (notifTaskId !== taskId) return;
+        if (event === 'TASK_DELETED') {
+          navigation.goBack();
+        } else if (event === 'TASK_UPDATED') {
+          tasksApi.get(taskId).then(setTask).catch(() => navigation.goBack());
+        }
+      });
+      return unsubscribe;
+    }, [user?.id, taskId, navigation]),
   );
 
   const handleDelete = () => {
