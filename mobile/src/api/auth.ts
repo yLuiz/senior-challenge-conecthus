@@ -1,0 +1,12 @@
+import api from './axios';
+import { AuthResponse, User } from '../types';
+
+export const authApi = {
+  register: (data: { name: string; email: string; password: string }) =>
+    api.post<AuthResponse>('v1/auth/register', data).then(response => response.data),
+
+  login: (data: { email: string; password: string }) =>
+    api.post<AuthResponse>('v1/auth/login', data).then(response => response.data),
+
+  getMe: () => api.get<User>('v1/auth/me').then(response => response.data),
+};
