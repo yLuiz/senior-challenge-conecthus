@@ -13,6 +13,10 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^7.3.8",
+    "@mui/material": "^7.3.8",
     "axios": "^1.7.9",
     "mqtt": "^5.10.1",
     "react": "^18.3.1",

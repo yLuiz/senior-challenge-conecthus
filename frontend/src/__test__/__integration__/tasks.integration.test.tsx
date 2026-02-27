@@ -166,16 +166,17 @@ describe('Página de Tarefas (integração)', () => {
       });
     });
 
-    it('exibe "Carregando tarefas..." enquanto a requisição está em andamento', async () => {
+    it('exibe skeleton cards enquanto a requisição está em andamento', async () => {
       // Nunca resolve a promise, mantém o estado de carregamento visível
       mockedTasksApi.list.mockImplementation(() => new Promise(() => {}));
 
-      renderTasksPage();
+      const { container } = renderTasksPage();
 
       // ProtectedRoute exibe "Carregando..." enquanto getMe resolve a promise;
-      // só após isso o TasksPage monta e exibe "Carregando tarefas..."
+      // só após isso o TasksPage monta e exibe os skeleton cards (aria-hidden="true")
       await waitFor(() => {
-        expect(screen.getByText('Carregando tarefas...')).toBeInTheDocument();
+        const skeletons = container.querySelectorAll('[aria-hidden="true"]');
+        expect(skeletons.length).toBeGreaterThan(0);
       });
     });
   });

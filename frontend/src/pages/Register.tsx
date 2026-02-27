@@ -1,3 +1,5 @@
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import RadioButtonUncheckedIcon from '@mui/icons-material/RadioButtonUnchecked';
 import { useState, FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -104,7 +106,10 @@ export function RegisterPage() {
               <ul className={styles.criteria}>
                 {passwordCriteria.map(({ label, met }) => (
                   <li key={label} className={met ? styles.criterionMet : styles.criterionUnmet}>
-                    {met ? '✓' : '○'} {label}
+                    {met
+                      ? <CheckCircleIcon sx={{ fontSize: 12 }} />
+                      : <RadioButtonUncheckedIcon sx={{ fontSize: 12 }} />}
+                    {label}
                   </li>
                 ))}
               </ul>

@@ -71,10 +71,23 @@
   border-radius: 8px;
 }
 
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .actions {
   display: flex;
   gap: 0.75rem;
   margin-top: 1.5rem;
+}
+
+.editBtn,
+.deleteBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .editBtn {

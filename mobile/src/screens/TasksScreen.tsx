@@ -10,6 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import Toast from 'react-native-toast-message';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -163,16 +164,20 @@ export function TasksScreen({ navigation }: Props) {
       ) : null}
 
       {item.dueDate ? (
-        <Text style={styles.dueDate}>
-          📅 {new Date(item.dueDate).toLocaleDateString('pt-BR')}
-        </Text>
+        <View style={styles.dueDateRow}>
+          <MaterialIcons name="calendar-today" size={11} color="#9ca3af" />
+          <Text style={styles.dueDate}>{new Date(item.dueDate).toLocaleDateString('pt-BR')}</Text>
+        </View>
       ) : null}
 
       <TouchableOpacity
         style={styles.deleteBtn}
         onPress={() => handleDelete(item.id)}
       >
-        <Text style={styles.deleteBtnText}>🗑️ Excluir</Text>
+        <View style={styles.deleteBtnInner}>
+          <MaterialIcons name="delete-outline" size={14} color="#dc2626" />
+          <Text style={styles.deleteBtnText}>Excluir</Text>
+        </View>
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -316,8 +321,10 @@ const styles = StyleSheet.create({
   },
   badgeText: { color: '#fff', fontSize: 11, fontWeight: '600' },
   cardDesc: { fontSize: 13, color: '#6b7280', lineHeight: 18 },
-  dueDate: { fontSize: 12, color: '#9ca3af', marginTop: 6 },
+  dueDateRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 6 },
+  dueDate: { fontSize: 12, color: '#9ca3af' },
   deleteBtn: { alignSelf: 'flex-end', marginTop: 10 },
+  deleteBtnInner: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   deleteBtnText: { color: '#dc2626', fontSize: 13 },
   fab: {
     position: 'absolute',

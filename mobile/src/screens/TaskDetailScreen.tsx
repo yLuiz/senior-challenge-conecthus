@@ -1,4 +1,5 @@
 import React, { useState, useCallback } from 'react';
+import { MaterialIcons } from '@expo/vector-icons';
 import {
   View,
   Text,
@@ -148,11 +149,17 @@ export function TaskDetailScreen({ navigation, route }: Props) {
           style={styles.editBtn}
           onPress={() => navigation.navigate('CreateTask', { taskId: task.id })}
         >
-          <Text style={styles.editBtnText}>✏️ Editar Tarefa</Text>
+          <View style={styles.btnContent}>
+            <MaterialIcons name="edit" size={16} color="#fff" />
+            <Text style={styles.editBtnText}>Editar Tarefa</Text>
+          </View>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.deleteBtn} onPress={handleDelete}>
-          <Text style={styles.deleteBtnText}>🗑️ Excluir Tarefa</Text>
+          <View style={styles.btnContent}>
+            <MaterialIcons name="delete-outline" size={16} color="#dc2626" />
+            <Text style={styles.deleteBtnText}>Excluir Tarefa</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -223,6 +230,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  btnContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   editBtnText: { color: '#fff', fontSize: 15, fontWeight: '700' },
   deleteBtn: {
     backgroundColor: '#fee2e2',

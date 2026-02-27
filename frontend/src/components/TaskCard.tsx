@@ -1,3 +1,4 @@
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import { Task, TaskStatus } from '../types';
 import styles from './TaskCard.module.css';
 
@@ -58,7 +59,7 @@ export function TaskCard({ task, onClick, onDelete, onStatusChange }: TaskCardPr
           className={styles.deleteBtn}
           title="Excluir tarefa"
         >
-          🗑️
+          <DeleteOutlineIcon sx={{ fontSize: 18, color: '#ef4444' }} />
         </button>
       </div>
     </div>
