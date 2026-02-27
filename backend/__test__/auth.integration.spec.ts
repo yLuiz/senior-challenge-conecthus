@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Global, INestApplication, Module, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Global, HttpStatus, INestApplication, Module, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Test } from '@nestjs/testing';
 import * as bcrypt from 'bcryptjs';
@@ -8,6 +8,7 @@ import { ResponseInterceptor } from 'src/infra/http/interceptors/response.interc
 import { RedisService } from 'src/infra/cache/redis.service';
 import { PrismaService } from 'src/infra/database/prisma/prisma.service';
 import { AuthModule } from 'src/modules/auth/auth.module';
+import { envConfig } from 'src/config/configuration';
 
 const MOCK_ID = 'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee';
 const MOCK_EMAIL = 'integration@test.com';
@@ -44,7 +45,7 @@ const redisStub = {
   taskListKey: (userId: string, q?: string) => `tasks:${userId}:${q ?? 'all'}`,
 };
 
-// Módulo global de stubs de infra — evita que os módulos reais (PrismaModule, CacheModule)
+// Módulo global de stubs de infra. Evita que os módulos reais (PrismaModule, CacheModule)
 // tentem abrir conexões de banco/Redis durante os testes.
 @Global()
 @Module({
@@ -73,12 +74,14 @@ async function buildApp(): Promise<INestApplication> {
   return app;
 }
 
+let PASSWORD_SALT: number;
 describe('Auth — camada HTTP (integração)', () => {
   let app: INestApplication;
   let hashedPass: string;
-
+  
   beforeAll(async () => {
-    hashedPass = await bcrypt.hash(TEST_PASS, 10);
+    PASSWORD_SALT = envConfig().PASSWORD_SALT;
+    hashedPass = await bcrypt.hash(TEST_PASS, PASSWORD_SALT);
     app = await buildApp();
   });
 
@@ -95,27 +98,25 @@ describe('Auth — camada HTTP (integração)', () => {
     redisStub.delByPattern.mockResolvedValue(undefined);
   });
 
-  // ── Utilitário: faz login e retorna os tokens ──────────────────────────────
   async function doLogin() {
     prismaStub.user.findUnique
       .mockResolvedValueOnce({ ...safeUser, password: hashedPass }) // findByEmail em AuthService.login
-      .mockResolvedValue(safeUser);                                  // findById (JwtStrategy + getProfile)
+      .mockResolvedValue(safeUser); // findById (JwtStrategy + getProfile)
     return request(app.getHttpServer())
       .post('/api/v1/auth/login')
       .send({ email: MOCK_EMAIL, password: TEST_PASS });
   }
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('POST /api/v1/auth/register', () => {
     it('cria usuário e retorna tokens (201)', async () => {
-      // findByEmail chamado 2× (AuthService + UsersService.create) → null
+      // findByEmail chamado 2x (AuthService + UsersService.create) = null
       prismaStub.user.findUnique.mockResolvedValue(null);
       prismaStub.user.create.mockResolvedValue(safeUser);
 
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({ name: MOCK_NAME, email: MOCK_EMAIL, password: TEST_PASS })
-        .expect(201);
+        .expect(HttpStatus.CREATED);
 
       expect(res.body.data).toHaveProperty('access_token');
       expect(res.body.data).toHaveProperty('refresh_token');
@@ -130,25 +131,24 @@ describe('Auth — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({ name: 'Outro', email: MOCK_EMAIL, password: TEST_PASS })
-        .expect(409);
+        .expect(HttpStatus.CONFLICT);
     });
 
     it('retorna 400 para senha que não atende aos critérios', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({ name: 'Test', email: 'test@test.com', password: 'senhafraca' })
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it('retorna 400 quando campos obrigatórios estão ausentes', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/register')
         .send({ email: MOCK_EMAIL })
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('POST /api/v1/auth/login', () => {
     it('autentica e retorna tokens (200)', async () => {
       prismaStub.user.findUnique.mockResolvedValue({ ...safeUser, password: hashedPass });
@@ -156,7 +156,7 @@ describe('Auth — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({ email: MOCK_EMAIL, password: TEST_PASS })
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data).toHaveProperty('access_token');
       expect(res.body.data).toHaveProperty('refresh_token');
@@ -169,7 +169,7 @@ describe('Auth — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({ email: MOCK_EMAIL, password: 'SenhaErrada@9' })
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
 
     it('retorna 401 para e-mail não cadastrado', async () => {
@@ -178,42 +178,40 @@ describe('Auth — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/login')
         .send({ email: 'ghost@test.com', password: TEST_PASS })
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('GET /api/v1/auth/me', () => {
     it('retorna o perfil sem a senha (200)', async () => {
       const loginRes = await doLogin();
       const token = loginRes.body.data.access_token;
 
-      // JwtStrategy.validate chama findById → redis miss → prisma
-      // AuthService.getProfile chama findById → redis miss → prisma novamente
+      // JwtStrategy.validate chama findById -> redis miss -> prisma
+      // AuthService.getProfile chama findById -> redis miss -> prisma novamente
       prismaStub.user.findUnique.mockResolvedValue(safeUser);
 
       const res = await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Authorization', `Bearer ${token}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data.email).toBe(MOCK_EMAIL);
       expect(res.body.data).not.toHaveProperty('password');
     });
 
     it('retorna 401 sem token', async () => {
-      await request(app.getHttpServer()).get('/api/v1/auth/me').expect(401);
+      await request(app.getHttpServer()).get('/api/v1/auth/me').expect(HttpStatus.UNAUTHORIZED);
     });
 
     it('retorna 401 com token malformado', async () => {
       await request(app.getHttpServer())
         .get('/api/v1/auth/me')
         .set('Authorization', 'Bearer token.invalido.aqui')
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('POST /api/v1/auth/logout', () => {
     it('deleta o refresh token e coloca o access token na blacklist (200)', async () => {
       const loginRes = await doLogin();
@@ -225,7 +223,7 @@ describe('Auth — camada HTTP (integração)', () => {
         .post('/api/v1/auth/logout')
         .set('Authorization', `Bearer ${refresh_token}`)
         .send({ access_token })
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(prismaStub.refreshToken.deleteMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: expect.objectContaining({ userId: MOCK_ID }) }),
@@ -238,7 +236,6 @@ describe('Auth — camada HTTP (integração)', () => {
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('POST /api/v1/auth/refresh', () => {
     it('emite novos tokens com refresh token válido (200)', async () => {
       const loginRes = await doLogin();
@@ -267,7 +264,7 @@ describe('Auth — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .post('/api/v1/auth/refresh')
         .set('Authorization', `Bearer ${refresh_token}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data).toHaveProperty('access_token');
       expect(res.body.data).toHaveProperty('refresh_token');
@@ -277,7 +274,7 @@ describe('Auth — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .post('/api/v1/auth/refresh')
         .set('Authorization', 'Bearer token.invalido.aqui')
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 });

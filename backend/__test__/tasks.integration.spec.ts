@@ -1,4 +1,4 @@
-import { ClassSerializerInterceptor, Global, INestApplication, Module, ValidationPipe } from '@nestjs/common';
+import { ClassSerializerInterceptor, Global, HttpStatus, INestApplication, Module, ValidationPipe } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
@@ -130,10 +130,9 @@ describe('Tasks — camada HTTP (integração)', () => {
     prismaStub.user.findUnique.mockResolvedValue(mockUser);
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('GET /api/v1/tasks', () => {
     it('retorna 401 sem autenticação', async () => {
-      await request(app.getHttpServer()).get('/api/v1/tasks').expect(401);
+      await request(app.getHttpServer()).get('/api/v1/tasks').expect(HttpStatus.UNAUTHORIZED);
     });
 
     it('retorna lista paginada de tarefas (200)', async () => {
@@ -142,7 +141,7 @@ describe('Tasks — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .get('/api/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(Array.isArray(res.body.data)).toBe(true);
       expect(res.body.meta).toMatchObject({ total: 1, page: 1 });
@@ -159,7 +158,7 @@ describe('Tasks — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .get('/api/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data[0].id).toBe(MOCK_TASK_ID);
       // Com cache hit, prisma.$transaction não deve ser chamado
@@ -172,13 +171,12 @@ describe('Tasks — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .get('/api/v1/tasks?status=TODO')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data.every((t: { status: string }) => t.status === 'TODO')).toBe(true);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('POST /api/v1/tasks', () => {
     it('cria tarefa e publica notificação MQTT (201)', async () => {
       prismaStub.task.create.mockResolvedValue(mockTask);
@@ -187,7 +185,7 @@ describe('Tasks — camada HTTP (integração)', () => {
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ title: 'Tarefa de Integração', description: 'Descrição da tarefa', status: 'TODO' })
-        .expect(201);
+        .expect(HttpStatus.CREATED);
 
       expect(res.body.data.id).toBe(MOCK_TASK_ID);
       expect(res.body.data.title).toBe('Tarefa de Integração');
@@ -204,18 +202,17 @@ describe('Tasks — camada HTTP (integração)', () => {
         .post('/api/v1/tasks')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ description: 'sem título' })
-        .expect(400);
+        .expect(HttpStatus.BAD_REQUEST);
     });
 
     it('retorna 401 sem autenticação', async () => {
       await request(app.getHttpServer())
         .post('/api/v1/tasks')
         .send({ title: 'Qualquer' })
-        .expect(401);
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('GET /api/v1/tasks/:id', () => {
     it('retorna tarefa específica (200)', async () => {
       prismaStub.task.findUnique.mockResolvedValue(mockTask);
@@ -223,7 +220,7 @@ describe('Tasks — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .get(`/api/v1/tasks/${MOCK_TASK_ID}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data.id).toBe(MOCK_TASK_ID);
       expect(res.body.data.title).toBe('Tarefa de Integração');
@@ -235,11 +232,10 @@ describe('Tasks — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .get('/api/v1/tasks/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(404);
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('PATCH /api/v1/tasks/:id', () => {
     it('atualiza tarefa e publica notificação MQTT (200)', async () => {
       const updated = { ...mockTask, status: 'DONE' };
@@ -250,7 +246,7 @@ describe('Tasks — camada HTTP (integração)', () => {
         .patch(`/api/v1/tasks/${MOCK_TASK_ID}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ status: 'DONE' })
-        .expect(200);
+        .expect(HttpStatus.OK);
 
       expect(res.body.data.status).toBe('DONE');
       expect(redisStub.delByPattern).toHaveBeenCalledWith('tasks:all');
@@ -267,11 +263,10 @@ describe('Tasks — camada HTTP (integração)', () => {
         .patch('/api/v1/tasks/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ status: 'DONE' })
-        .expect(404);
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
-  // ────────────────────────────────────────────────────────────────────────────
   describe('DELETE /api/v1/tasks/:id', () => {
     it('exclui tarefa e publica notificação MQTT (200)', async () => {
       prismaStub.task.findUnique.mockResolvedValue(mockTask);
@@ -280,9 +275,9 @@ describe('Tasks — camada HTTP (integração)', () => {
       const res = await request(app.getHttpServer())
         .delete(`/api/v1/tasks/${MOCK_TASK_ID}`)
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(200);
+        .expect(HttpStatus.OK);
 
-      expect(res.body.data).toHaveProperty('statusCode', 200);
+      expect(res.body.data).toHaveProperty('statusCode', HttpStatus.OK);
       expect(prismaStub.task.delete).toHaveBeenCalledWith({ where: { id: MOCK_TASK_ID } });
       expect(redisStub.delByPattern).toHaveBeenCalledWith('tasks:all');
       expect(mqttStub.publishTaskDeleted).toHaveBeenCalledWith(
@@ -297,7 +292,7 @@ describe('Tasks — camada HTTP (integração)', () => {
       await request(app.getHttpServer())
         .delete('/api/v1/tasks/00000000-0000-0000-0000-000000000000')
         .set('Authorization', `Bearer ${accessToken}`)
-        .expect(404);
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 });
