@@ -58,6 +58,13 @@
   font-size: 0.95rem;
 }
 
+.descriptionEmpty {
+  color: #9ca3af;
+  font-style: italic;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;

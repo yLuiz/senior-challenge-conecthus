@@ -123,14 +123,12 @@ export function TaskDetailScreen({ navigation, route }: Props) {
         )}
 
         <View style={styles.meta}>
-          {task.dueDate && (
-            <View style={styles.metaRow}>
-              <Text style={styles.metaLabel}>Vencimento:</Text>
-              <Text style={styles.metaValue}>
-                {task.dueDate.split('T')[0].split('-').reverse().join('/')}
-              </Text>
-            </View>
-          )}
+          <View style={styles.metaRow}>
+            <Text style={styles.metaLabel}>Vencimento:</Text>
+            <Text style={styles.metaValue}>
+              {task.dueDate ? task.dueDate.split('T')[0].split('-').reverse().join('/') : '-'}
+            </Text>
+          </View>
           <View style={styles.metaRow}>
             <Text style={styles.metaLabel}>Criada em:</Text>
             <Text style={styles.metaValue}>
