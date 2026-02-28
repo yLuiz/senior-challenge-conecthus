@@ -3,6 +3,7 @@
 Aplicação full stack de gerenciamento de tarefas desenvolvida como desafio técnico.
 
 Link de acesso na Vercel: https://senior-challenge-conecthus.vercel.app/login
+<br>
 Link para baixar o Aplicativo: https://shorturl.at/RL22M (Link Expo encurtado)
 
 ## Stack
