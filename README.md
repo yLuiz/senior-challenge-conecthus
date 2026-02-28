@@ -2,6 +2,8 @@
 
 Aplicação full stack de gerenciamento de tarefas desenvolvida como desafio técnico.
 
+Link de acesso na Vercel: https://senior-challenge-conecthus.vercel.app/login
+
 ## Stack
 
 | Camada   | Tecnologias                                                              |
