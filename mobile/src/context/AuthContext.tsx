@@ -4,7 +4,7 @@ import { User } from '../types';
 import { authApi } from '../api/auth';
 import { registerAuthCallbacks } from '../api/axios';
 import { MQTT_URL } from '../config/env';
-import { mqttService } from '../../mqtt/mqttService';
+import { mqttService } from '@/mqtt/mqttService';
 
 interface AuthContextData {
   user: User | null;

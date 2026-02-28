@@ -93,7 +93,7 @@ describe('LoginScreen', () => {
     });
 
     it('exibe alerta de credenciais inválidas quando o login falha', async () => {
-      mockLogin.mockRejectedValueOnce(new Error('Unauthorized'));
+      mockLogin.mockRejectedValueOnce({ response: { status: 401 } });
       const { getByPlaceholderText, getByText } = render(
         <LoginScreen navigation={navigation} route={route} />,
       );
@@ -102,6 +102,22 @@ describe('LoginScreen', () => {
       fireEvent.press(getByText('Entrar'));
       await waitFor(() => {
         expect(Alert.alert).toHaveBeenCalledWith('Erro', 'Email ou senha inválidos');
+      });
+    });
+
+    it('exibe alerta de erro de conexão quando não há resposta do servidor', async () => {
+      mockLogin.mockRejectedValueOnce(new Error('Network Error'));
+      const { getByPlaceholderText, getByText } = render(
+        <LoginScreen navigation={navigation} route={route} />,
+      );
+      fireEvent.changeText(getByPlaceholderText('Email'), 'test@email.com');
+      fireEvent.changeText(getByPlaceholderText('Senha'), 'minhasenha');
+      fireEvent.press(getByText('Entrar'));
+      await waitFor(() => {
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Erro de Conexão',
+          'Não foi possível conectar ao servidor. Verifique sua internet e tente novamente.',
+        );
       });
     });
   });

@@ -22,7 +22,8 @@ import { Task, TaskStatus, RootStackParamList } from '../types';
 
 import { useAuth } from '../context/AuthContext';
 import { tasksApi } from '@/api/tasks';
-import { mqttService } from '../../mqtt/mqttService';
+import { mqttService } from '@/mqtt/mqttService';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Tasks'>;
 

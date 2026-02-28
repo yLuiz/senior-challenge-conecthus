@@ -17,7 +17,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, Task, TaskStatus } from '../types';
 import { tasksApi } from '../api/tasks';
 import { useAuth } from '../context/AuthContext';
-import { mqttService } from '../../mqtt/mqttService';
+import { mqttService } from '@/mqtt/mqttService';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'>;
 
